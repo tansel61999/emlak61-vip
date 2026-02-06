@@ -32,7 +32,6 @@ const MusteriYonetimi = () => {
     return () => { unsubscribeMusteri(); unsubscribeIlan(); };
   }, []);
 
-  // OTOMATİK EŞLEŞME MANTIĞI (Matchmaking)
   const eslesenIlanlariGetir = (talep) => {
     if (!talep) return [];
     return ilanlar.filter(ilan => {
@@ -40,9 +39,7 @@ const MusteriYonetimi = () => {
       const islemUyumu = ilan.islemTipi === talep.islemTipi;
       const fiyatUyumu = (!talep.fiyatMax || Number(ilan.fiyat) <= Number(talep.fiyatMax)) &&
                          (!talep.fiyatMin || Number(ilan.fiyat) >= Number(talep.fiyatMin));
-      // Konum kontrolü (Basit metin eşleşmesi)
       const konumUyumu = talep.konum ? ilan.konum?.toLowerCase().includes(talep.konum.split(',')[0].trim().toLowerCase()) : true;
-      
       return katUyumu && islemUyumu && fiyatUyumu && konumUyumu;
     });
   };
@@ -69,32 +66,16 @@ const MusteriYonetimi = () => {
     }
   };
 
-// ... (Dosyanın başı aynı)
-
   const arsivle = async (id) => {
-    // Müşterinin durumunu 'Arşivlendi' yaparak ana listeden gizliyoruz
-    await updateDoc(doc(veritabani, "musteriler", id), { 
-      durum: "Arşivlendi",
-      arsivTarihi: serverTimestamp() 
-    });
+    const onay = window.confirm("Bu müşteriyi arşive taşımak istiyor musunuz?");
+    if (onay) {
+      await updateDoc(doc(veritabani, "musteriler", id), { 
+        durum: "Arşivlendi",
+        arsivTarihi: serverTimestamp() 
+      });
+    }
   };
 
-// ... (Listeleme kısmında filtre ekliyoruz)
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    {musteriler
-      .filter(m => m.durum !== "Arşivlendi") // SADECE ARŞİVLENMEMİŞ OLANLARI GÖSTER
-      .filter(m => m.ad?.toLowerCase().includes(aramaMetni))
-      .map((m) => (
-        // ... (Kart tasarımı aynı)
-        <button 
-          onClick={() => arsivle(m.id)} 
-          className="flex-1 bg-[#0A192F] text-[#FFD700] p-4 rounded-2xl font-black text-xs"
-        >
-          TAMAMLANDI / ARŞİVLE
-        </button>
-      ))}
-  </div>
-  
   const whatsappMesaj = (tel) => {
     const temizTel = tel.replace(/\s/g, '');
     window.open(`https://wa.me/90${temizTel}`, '_blank');
@@ -102,7 +83,7 @@ const MusteriYonetimi = () => {
 
   return (
     <div className="space-y-6 p-4">
-      {/* Üst Panel & Filtreleme (Talep Analizi & Filtreleme) */}
+      {/* Üst Panel */}
       <div className="bg-white p-6 rounded-[2.5rem] shadow-sm space-y-4">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <h2 className="text-2xl font-black text-[#0A192F]">MÜŞTERİ PORTFÖYÜ</h2>
@@ -116,7 +97,7 @@ const MusteriYonetimi = () => {
             <Search className="absolute left-4 top-3.5 text-gray-400" size={20} />
             <input
               type="text"
-              placeholder="İsim, telefon veya notlarda ara..."
+              placeholder="İsim veya telefon ara..."
               className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-[#FFD700] font-bold"
               onChange={(e) => setAramaMetni(e.target.value.toLowerCase())}
             />
@@ -126,23 +107,23 @@ const MusteriYonetimi = () => {
             onChange={(e) => setKategoriFiltre(e.target.value)}
           >
             <option value="Hepsi">Tüm Kategoriler</option>
-            <option value="Daire">Daire Arayanlar</option>
-            <option value="Villa">Villa Arayanlar</option>
-            <option value="Arsa">Arsa Arayanlar</option>
+            <option value="Daire">Daire</option>
+            <option value="Villa">Villa</option>
+            <option value="Arsa">Arsa</option>
           </select>
         </div>
       </div>
 
-      {/* Müşteri Kartları */}
+      {/* Kartlar */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {musteriler
+          .filter(m => m.durum !== "Arşivlendi")
           .filter(m => m.ad?.toLowerCase().includes(aramaMetni) || m.telefon?.includes(aramaMetni))
           .filter(m => kategoriFiltre === "Hepsi" || m.talepDetay?.kategori === kategoriFiltre)
           .map((m) => {
             const eslesmeler = eslesenIlanlariGetir(m.talepDetay);
             return (
-              <div key={m.id} className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100 relative group overflow-hidden">
-                {/* Matchmaking Rozeti */}
+              <div key={m.id} className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100 relative overflow-hidden">
                 {eslesmeler.length > 0 && (
                   <div className="absolute top-0 left-0 bg-[#FFD700] text-[#0A192F] px-4 py-2 rounded-br-2xl font-black text-[10px] flex items-center gap-1 animate-pulse">
                     <Zap size={12} fill="currentColor"/> {eslesmeler.length} UYGUN İLAN
@@ -158,24 +139,18 @@ const MusteriYonetimi = () => {
                   </button>
                 </div>
 
-                <h3 className="text-2xl font-black text-gray-800 mb-1 uppercase leading-tight">{m.ad}</h3>
-                <div className="flex items-center gap-2 text-gray-500 font-bold mb-6">
-                   <Phone size={16} className="text-[#FFD700]"/> 0{m.telefon}
+                <h3 className="text-2xl font-black text-gray-800 mb-1 uppercase tracking-tighter">{m.ad}</h3>
+                <div className="flex items-center gap-2 text-gray-500 font-bold mb-6 text-sm">
+                   <Phone size={14} className="text-[#FFD700]"/> 0{m.telefon}
                 </div>
 
-                {/* Talep Özeti (Müşteri Sadakati İçin) */}
-                <div className="bg-gray-50 p-5 rounded-3xl mb-6 border border-gray-100">
-                  <p className="text-xs text-gray-400 font-bold uppercase mb-2">Müşteri Notu & Talep</p>
+                <div className="bg-gray-50 p-5 rounded-3xl mb-6 border border-gray-100 min-h-[100px]">
                   <p className="text-sm text-gray-600 font-medium italic mb-3">"{m.not}"</p>
-                  
-                  {m.talepDetay ? (
+                  {m.talepDetay && (
                     <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-200">
                       <span className="bg-[#0A192F] text-[#FFD700] text-[9px] px-2 py-1 rounded-lg font-black uppercase">{m.talepDetay.islemTipi}</span>
                       <span className="bg-blue-50 text-blue-700 text-[9px] px-2 py-1 rounded-lg font-black uppercase">{m.talepDetay.kategori}</span>
-                      <span className="bg-green-50 text-green-700 text-[9px] px-2 py-1 rounded-lg font-black uppercase">{m.talepDetay.konum}</span>
                     </div>
-                  ) : (
-                    <p className="text-[10px] text-amber-500 font-black uppercase tracking-tighter">Henüz detaylı talep girilmedi</p>
                   )}
                 </div>
 
@@ -186,25 +161,29 @@ const MusteriYonetimi = () => {
                   >
                     <Briefcase size={16}/> {m.talepDetay ? "TALEBİ GÜNCELLE" : "İŞ / TALEP EKLE"}
                   </button>
-                  <button onClick={() => whatsappMesaj(m.telefon)} className="w-full bg-[#25D366] text-white py-4 rounded-2xl flex items-center justify-center gap-2 font-black text-xs hover:opacity-90">
-                    <MessageSquare size={18} /> WHATSAPP'TAN YAZ
-                  </button>
+                  <div className="flex gap-2">
+                    <button onClick={() => whatsappMesaj(m.telefon)} className="flex-1 bg-[#25D366] text-white py-4 rounded-2xl flex items-center justify-center gap-2 font-black text-xs">
+                      <MessageSquare size={18} /> WHATSAPP
+                    </button>
+                    <button onClick={() => arsivle(m.id)} className="flex-1 bg-[#0A192F] text-[#FFD700] py-4 rounded-2xl font-black text-[10px]">
+                      ARŞİVLE
+                    </button>
+                  </div>
                 </div>
               </div>
             );
           })}
       </div>
 
-      {/* MODALLAR (Öncekiyle Aynı, Form Yapıları Korundu) */}
-      {/* ... (Hızlı Müşteri ve Detaylı Talep Modalları yukarıdaki kodla aynı şekilde devam ediyor) ... */}
+      {/* MODAL: MÜŞTERİ EKLE */}
       {formAcik && (
         <div className="fixed inset-0 bg-[#0A192F]/90 backdrop-blur-md flex items-center justify-center z-[110] p-4">
-          <div className="bg-white rounded-[2.5rem] p-10 w-full max-w-md shadow-2xl">
+          <div className="bg-white rounded-[2.5rem] p-10 w-full max-w-md">
             <h3 className="text-3xl font-black mb-8 text-[#0A192F]">YENİ MÜŞTERİ</h3>
             <form onSubmit={musteriKaydet} className="space-y-5">
               <input required placeholder="Ad Soyad" className="w-full p-5 bg-gray-50 border-none rounded-2xl font-bold" onChange={e => setYeniMusteri({...yeniMusteri, ad: e.target.value})} />
               <input required placeholder="Telefon" className="w-full p-5 bg-gray-50 border-none rounded-2xl font-bold" onChange={e => setYeniMusteri({...yeniMusteri, telefon: e.target.value})} />
-              <textarea placeholder="Kısa Not..." className="w-full p-5 bg-gray-50 border-none rounded-2xl h-32 font-bold" onChange={e => setYeniMusteri({...yeniMusteri, not: e.target.value})} />
+              <textarea placeholder="Not..." className="w-full p-5 bg-gray-50 border-none rounded-2xl h-32 font-bold" onChange={e => setYeniMusteri({...yeniMusteri, not: e.target.value})} />
               <button type="submit" className="w-full bg-[#0A192F] text-[#FFD700] py-5 rounded-2xl font-black text-lg">KAYDET</button>
               <button type="button" onClick={() => setFormAcik(false)} className="w-full text-gray-400 font-bold py-2">Vazgeç</button>
             </form>
@@ -212,31 +191,32 @@ const MusteriYonetimi = () => {
         </div>
       )}
 
+      {/* MODAL: TALEP FORMU */}
       {talepFormAcik && (
         <div className="fixed inset-0 bg-[#0A192F]/90 backdrop-blur-md flex items-center justify-center z-[120] p-4">
-          <div className="bg-white rounded-[2.5rem] p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl relative">
+          <div className="bg-white rounded-[2.5rem] p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto relative">
             <button className="absolute top-6 right-6 text-gray-400" onClick={() => setTalepFormAcik(false)}><X size={30}/></button>
             <h3 className="text-2xl font-black mb-8 text-[#0A192F] uppercase">{seciliMusteri?.ad} <br/><span className="text-[#FFD700]">TALEP DETAYLARI</span></h3>
             <form onSubmit={talepKaydet} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                     <label className="text-xs font-black text-gray-400 uppercase">İşlem & Kategori</label>
-                    <select className="w-full p-4 bg-gray-50 rounded-2xl font-bold border-none" onChange={e => setIsTalebi({...isTalebi, islemTipi: e.target.value})}>
+                    <select className="w-full p-4 bg-gray-50 rounded-2xl font-bold border-none" value={isTalebi.islemTipi} onChange={e => setIsTalebi({...isTalebi, islemTipi: e.target.value})}>
                         <option>Satılık</option><option>Kiralık</option>
                     </select>
-                    <select className="w-full p-4 bg-gray-50 rounded-2xl font-bold border-none" onChange={e => setIsTalebi({...isTalebi, kategori: e.target.value})}>
-                        <option>Daire</option><option>Villa</option><option>Yazlık</option><option>Arsa</option><option>Tarla</option>
+                    <select className="w-full p-4 bg-gray-50 rounded-2xl font-bold border-none" value={isTalebi.kategori} onChange={e => setIsTalebi({...isTalebi, kategori: e.target.value})}>
+                        <option>Daire</option><option>Villa</option><option>Yazlık</option><option>Arsa</option>
                     </select>
                 </div>
                 <div className="space-y-4">
                     <label className="text-xs font-black text-gray-400 uppercase">Bütçe (TL)</label>
-                    <input type="number" placeholder="Min Fiyat" className="w-full p-4 bg-gray-50 rounded-2xl font-bold border-none" onChange={e => setIsTalebi({...isTalebi, fiyatMin: e.target.value})} />
-                    <input type="number" placeholder="Max Fiyat" className="w-full p-4 bg-gray-50 rounded-2xl font-bold border-none" onChange={e => setIsTalebi({...isTalebi, fiyatMax: e.target.value})} />
+                    <input type="number" placeholder="Min" className="w-full p-4 bg-gray-50 rounded-2xl font-bold border-none" onChange={e => setIsTalebi({...isTalebi, fiyatMin: e.target.value})} />
+                    <input type="number" placeholder="Max" className="w-full p-4 bg-gray-50 rounded-2xl font-bold border-none" onChange={e => setIsTalebi({...isTalebi, fiyatMax: e.target.value})} />
                 </div>
                 <div className="md:col-span-2 space-y-4">
                     <label className="text-xs font-black text-gray-400 uppercase">Konum</label>
-                    <input placeholder="Örn: Kuşadası, Kadınlar Denizi..." className="w-full p-4 bg-gray-50 rounded-2xl font-bold border-none" onChange={e => setIsTalebi({...isTalebi, konum: e.target.value})} />
+                    <input placeholder="Örn: Kuşadası..." className="w-full p-4 bg-gray-50 rounded-2xl font-bold border-none" onChange={e => setIsTalebi({...isTalebi, konum: e.target.value})} />
                 </div>
-                <button type="submit" className="md:col-span-2 bg-[#0A192F] text-[#FFD700] py-5 rounded-2xl font-black text-xl shadow-xl">ANALİZİ BAŞLAT VE KAYDET</button>
+                <button type="submit" className="md:col-span-2 bg-[#0A192F] text-[#FFD700] py-5 rounded-2xl font-black text-xl shadow-xl">KAYDET VE EŞLEŞTİR</button>
             </form>
           </div>
         </div>
