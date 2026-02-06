@@ -192,3 +192,23 @@ const MusteriYonetimi = () => {
 
               <div className="grid grid-cols-2 gap-2">
                 <input placeholder="Bütçe / Fiyat" type="number" className="w-full p-4 bg-gray-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-[#FFD700]"
+                  onChange={e => setYeniMusteri({...yeniMusteri, butce: e.target.value})} />
+                
+                <input placeholder="Aranan Bölge" className="w-full p-4 bg-gray-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-[#FFD700]"
+                  onChange={e => setYeniMusteri({...yeniMusteri, bolge: e.target.value})} />
+              </div>
+
+              <textarea placeholder="Detaylı Notlar..." className="w-full p-4 bg-gray-50 border-none rounded-2xl h-24 outline-none focus:ring-2 focus:ring-[#FFD700]"
+                onChange={e => setYeniMusteri({...yeniMusteri, not: e.target.value})} />
+              
+              <button type="submit" className="w-full bg-[#0A192F] text-[#FFD700] py-4 rounded-2xl font-black hover:bg-slate-800 transition-all">TALEBİ KAYDET</button>
+              <button type="button" onClick={() => setFormAcik(false)} className="w-full text-gray-400 font-bold py-2">Vazgeç</button>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default MusteriYonetimi;
