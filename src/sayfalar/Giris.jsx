@@ -1,7 +1,6 @@
 import React from 'react';
 // Dosya yolunun ve isminin tam eşleştiğinden emin oluyoruz
 import { yetki } from '../firebaseYapilandirma';
-import Giris from './sayfalar/Giris';
 import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 
 const Giris = () => {
