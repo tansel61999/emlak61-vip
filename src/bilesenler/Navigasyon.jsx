@@ -1,57 +1,48 @@
-import React from 'react';
-import { Home, PlusSquare, Users, Archive, LogOut } from 'lucide-react';
+import React, { useState } from 'react';
 import { getAuth, signOut } from 'firebase/auth';
+import IlanYonetimi from '../sayfalar/IlanYonetimi';
+import MusteriYonetimi from '../sayfalar/MusteriYonetimi';
+import Arsiv from '../sayfalar/Arsiv';
+import Duyurular from '../sayfalar/Duyurular';
 
-const Navigasyon = ({ setAktifSayfa, aktifSayfa }) => {
+const Navigasyon = () => {
+  const [aktifSayfa, setAktifSayfa] = useState('ana');
   const auth = getAuth();
 
-  const guvenliCikis = async () => {
-    try {
-      await signOut(auth);
-      // Çıkıştan sonra her şeyi sıfırlamak için sayfayı yenile
-      window.location.reload();
-    } catch (e) {
-      console.error("Çıkış hatası:", e);
+  const cikisYap = () => signOut(auth);
+
+  // Sayfa İçeriğini Belirle
+  const SayfaIcerigi = () => {
+    switch (aktifSayfa) {
+      case 'ilanlar': return <IlanYonetimi />;
+      case 'crm': return <MusteriYonetimi />;
+      case 'arsiv': return <Arsiv />;
+      default: return <Duyurular />; // Ana sayfa varsayılan olarak Duyurular olsun
     }
   };
 
-  const menuElemani = (id, baslik, Icon) => (
-    <button
-      onClick={() => setAktifSayfa(id)}
-      className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-        aktifSayfa === id ? 'bg-[#FFD700] text-[#0A192F] shadow-md' : 'text-white hover:bg-white/10'
-      }`}
-    >
-      <Icon size={20} />
-      <span className="font-semibold text-xs uppercase">{baslik}</span>
-    </button>
-  );
-
   return (
-    <nav className="bg-[#0A192F] p-4 sticky top-0 z-50 shadow-xl">
-      <div className="container mx-auto flex justify-between items-center">
-        <div className="text-[#FFD700] font-black text-2xl tracking-tighter cursor-pointer" onClick={() => setAktifSayfa('ANASAYFA')}>
+    <div className="min-h-screen bg-gray-100">
+      {/* Üst Bar */}
+      <nav className="bg-[#0A192F] text-white p-4 flex justify-between items-center shadow-lg">
+        <div className="text-[#FFD700] font-black text-xl tracking-tighter">
           EMLAK61 <span className="text-white">VIP</span>
         </div>
-
-        <div className="flex gap-2 items-center">
-          {menuElemani('ANASAYFA', 'Ana Sayfa', Home)}
-          {menuElemani('ILANLAR', 'İlanlar', PlusSquare)}
-          {menuElemani('MUSTERILER', 'CRM', Users)}
-          {menuElemani('ARSIV', 'Arşiv', Archive)}
-          
-          <div className="w-px h-6 bg-white/20 mx-2" /> {/* Ayırıcı çizgi */}
-          
-          <button 
-            onClick={guvenliCikis}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-red-400 hover:bg-red-500/10 transition-all font-black text-xs uppercase"
-          >
-            <LogOut size={20} />
-            ÇIKIŞ
-          </button>
+        
+        <div className="flex gap-6 items-center">
+          <button onClick={() => setAktifSayfa('ana')} className={`hover:text-[#FFD700] ${aktifSayfa === 'ana' ? 'text-[#FFD700]' : ''}`}>ANA SAYFA</button>
+          <button onClick={() => setAktifSayfa('ilanlar')} className={`hover:text-[#FFD700] ${aktifSayfa === 'ilanlar' ? 'text-[#FFD700]' : ''}`}>İLANLAR</button>
+          <button onClick={() => setAktifSayfa('crm')} className={`hover:text-[#FFD700] ${aktifSayfa === 'crm' ? 'text-[#FFD700]' : ''}`}>CRM</button>
+          <button onClick={() => setAktifSayfa('arsiv')} className={`hover:text-[#FFD700] ${aktifSayfa === 'arsiv' ? 'text-[#FFD700]' : ''}`}>ARŞİV</button>
+          <button onClick={cikisYap} className="bg-red-600 px-3 py-1 rounded hover:bg-red-700 ml-4">ÇIKIŞ</button>
         </div>
-      </div>
-    </nav>
+      </nav>
+
+      {/* Sayfa İçeriği */}
+      <main className="p-6">
+        <SayfaIcerigi />
+      </main>
+    </div>
   );
 };
 
