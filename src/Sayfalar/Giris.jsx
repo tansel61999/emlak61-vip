@@ -1,21 +1,20 @@
 import React from 'react';
 import { yetki, saglayici } from '../firebaseYapilandirma';
-import { signInWithPopup } from 'firebase/auth';
+import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 
 const Giris = () => {
-  // NOT: App.jsx kullanıcıyı algılayıp AnaPanel'i otomatik açacağı için yönlendirme gerekmez.
-
   const googleIleGiris = async () => {
     try {
-      // Her seferinde hesap seçme penceresini zorunlu yapar
-      saglayici.setCustomParameters({
+      // Her seferinde hesap seçme penceresini zorunlu hale getirir
+      const googleSaglayici = new GoogleAuthProvider();
+      googleSaglayici.setCustomParameters({
         prompt: 'select_account'
       });
 
-      await signInWithPopup(yetki, saglayici);
+      await signInWithPopup(yetki, googleSaglayici);
     } catch (hata) {
       console.error("Giriş hatası:", hata);
-      alert("Giriş başarısız! Lütfen tekrar deneyin.");
+      alert("Giriş başarısız!");
     }
   };
 
@@ -45,10 +44,6 @@ const Giris = () => {
         <p className="mt-8 text-[10px] text-gray-300 font-bold uppercase tracking-tighter leading-relaxed">
           Sadece yetkilendirilmiş kurumsal e-posta adresleri <br /> ile giriş yapılabilir.
         </p>
-      </div>
-
-      <div className="mt-6 text-white/20 font-black text-sm tracking-widest uppercase">
-        Kuşadası / Aydın
       </div>
     </div>
   );
