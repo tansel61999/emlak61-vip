@@ -346,19 +346,38 @@ const IlanYonetimi = () => {
                     <h1 className="text-xl font-black uppercase mb-10 leading-tight">{detayIlan.baslik}</h1>
 
                     <div className="grid grid-cols-2 gap-4 mb-10">
-                       {[
-                         { l: "ODA", v: detayIlan.odaSayisi },
-                         { l: "M²", v: detayIlan.m2 },
-                         { l: "KAT", v: detayIlan.kat },
-                         { l: "ISITMA", v: detayIlan.isitma },
-                         { l: "MUTFAK", v: `${detayIlan.mutfak },
-                         { l: "KONUM", v: detayIlan.ilce }
-                       ].map((item, idx) => (
-                         <div key={idx} className="bg-gray-50 p-5 rounded-[25px] border border-gray-100">
-                           <div className="text-[9px] font-black text-gray-400 mb-1 uppercase">{item.l}</div>
-                           <div className="text-xs font-black uppercase">{item.v || '-'}</div>
-                         </div>
-                       ))}
+                        {/* Ortak Alanlar */}
+                        {[
+                          { l: "ODA", v: detayIlan.odaSayisi },
+                          { l: "M²", v: detayIlan.m2 },
+                          { l: "KAT", v: detayIlan.kat },
+                          { l: "ISITMA", v: detayIlan.isitma },
+                          { l: "KONUM", v: detayIlan.ilce }
+                        ].map((item, idx) => (
+                          <div key={idx} className="bg-gray-50 p-5 rounded-[25px] border border-gray-100">
+                            <div className="text-[9px] font-black text-gray-400 mb-1 uppercase">{item.l}</div>
+                            <div className="text-xs font-black uppercase">{item.v || '-'}</div>
+                          </div>
+                        ))}
+
+                        {/* ARSA/TARLA İSE ADA-PARSEL, DEĞİLSE MUTFAK */}
+                        {detayIlan.emlakTipi === "Arsa" || detayIlan.emlakTipi === "Tarla" ? (
+                          <div className="bg-blue-50 p-5 rounded-[25px] border border-blue-100 col-span-2 flex gap-4">
+                            <div className="flex-1">
+                              <div className="text-[9px] font-black text-blue-400 mb-1 uppercase">ADA</div>
+                              <div className="text-xs font-black uppercase">{detayIlan.ada || '-'}</div>
+                            </div>
+                            <div className="flex-1">
+                              <div className="text-[9px] font-black text-blue-400 mb-1 uppercase">PARSEL</div>
+                              <div className="text-xs font-black uppercase">{detayIlan.parsel || '-'}</div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="bg-gray-50 p-5 rounded-[25px] border border-gray-100">
+                            <div className="text-[9px] font-black text-gray-400 mb-1 uppercase">MUTFAK</div>
+                            <div className="text-xs font-black uppercase">{detayIlan.mutfak || '-'}</div>
+                          </div>
+                        )}
                     </div>
 
                     <div className="space-y-4 mb-10">
