@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Image as ImageIcon, Loader2, Save, Trash2, Plus } from 'lucide-react';
+import { X, Image as ImageIcon, Loader2, Save, Trash2, Plus, User, Phone, MessageSquare } from 'lucide-react';
 
 const GenelForm = ({ tip, baslik, veri, setVeri, kapat, kaydet, resimYukle, resimYukleniyor }) => {
   const lokasyonVerisi = {
@@ -41,7 +41,6 @@ const GenelForm = ({ tip, baslik, veri, setVeri, kapat, kaydet, resimYukle, resi
     }
   };
 
-  // Arsa veya Tarla mı kontrolü
   const isArsaTarla = veri.emlakTipi === "Arsa" || veri.emlakTipi === "Tarla";
 
   return (
@@ -49,12 +48,11 @@ const GenelForm = ({ tip, baslik, veri, setVeri, kapat, kaydet, resimYukle, resi
       <div className="min-h-screen flex items-center justify-center p-4 md:p-8">
         <div className="bg-white rounded-[40px] w-full max-w-4xl shadow-2xl overflow-hidden relative">
           
-          {/* HEADER */}
           <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
             <div>
               <h2 className="text-2xl font-black uppercase tracking-tighter">{baslik}</h2>
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                {veri.id ? "MEVCUT İLANI GÜNCELLE" : "İLAN DETAYLARINI EKSİKSİZ DOLDURUNUZ"}
+                {tip === "talep" ? "MÜŞTERİ İŞ TALEBİ BİLGİLERİ" : (veri.id ? "MEVCUT İLANI GÜNCELLE" : "İLAN DETAYLARINI EKSİKSİZ DOLDURUNUZ")}
               </p>
             </div>
             <button onClick={kapat} className="p-3 bg-white text-red-500 rounded-2xl shadow-sm hover:bg-red-500 hover:text-white transition-all">
@@ -64,10 +62,24 @@ const GenelForm = ({ tip, baslik, veri, setVeri, kapat, kaydet, resimYukle, resi
 
           <form onSubmit={kaydet} className="p-8 space-y-8">
             
-            {/* RESİM YÜKLEME ALANI (KİBARLAŞTIRILDI) */}
+            {/* MÜŞTERİ BİLGİLERİ (SADECE TALEP MODÜLÜNDE GÖRÜNÜR) */}
+            {tip === "talep" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-blue-50/30 rounded-[30px] border border-blue-100">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase ml-2 text-blue-600 flex items-center gap-2"><User size={12}/> Müşteri Adı Soyadı</label>
+                  <input required name="musteriAd" value={veri.musteriAd || ""} onChange={handleInputChange} className="w-full p-4 bg-white rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold transition-all uppercase" placeholder="AD SOYAD" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase ml-2 text-blue-600 flex items-center gap-2"><Phone size={12}/> Telefon Numarası</label>
+                  <input required name="musteriTelefon" value={veri.musteriTelefon || ""} onChange={handleInputChange} className="w-full p-4 bg-white rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold transition-all uppercase" placeholder="05XX XXX XX XX" />
+                </div>
+              </div>
+            )}
+
+            {/* RESİM YÜKLEME ALANI */}
             <div className="space-y-4">
               <label className="text-[11px] font-black text-blue-600 uppercase tracking-widest flex items-center gap-2">
-                <ImageIcon size={14} /> Resimler
+                <ImageIcon size={14} /> {tip === "talep" ? "Varsa İlgili Görseller" : "Resimler"}
               </label>
               <div className="flex flex-wrap gap-3">
                 <label className="w-24 h-24 rounded-[20px] border-2 border-dashed border-gray-200 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all group">
@@ -93,24 +105,18 @@ const GenelForm = ({ tip, baslik, veri, setVeri, kapat, kaydet, resimYukle, resi
             {/* BAŞLIK VE FİYAT */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase ml-2 text-gray-400">İlan Başlığı</label>
-                <input required name="baslik" value={veri.baslik || ""} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold transition-all uppercase placeholder:text-gray-300" placeholder="İlan Başlığı Giriniz" />
+                <label className="text-[10px] font-black uppercase ml-2 text-gray-400">{tip === "talep" ? "İş/Talep Başlığı" : "İlan Başlığı"}</label>
+                <input required name="baslik" value={veri.baslik || ""} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold transition-all uppercase placeholder:text-gray-300" placeholder="BAŞLIK GİRİNİZ" />
               </div>
               <div className="flex gap-4">
                 <div className="flex-1 space-y-2">
-                  <label className="text-[10px] font-black uppercase ml-2 text-gray-400">Fiyat (₺)</label>
+                  <label className="text-[10px] font-black uppercase ml-2 text-gray-400">Bütçe / Fiyat (₺)</label>
                   <input required name="fiyat" value={veri.fiyat || ""} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-black text-blue-600 text-xl transition-all" placeholder="0" />
                 </div>
-                {veri.islemTuru === "Kiralık" && (
-                   <div className="flex-1 space-y-2">
-                    <label className="text-[10px] font-black uppercase ml-2 text-red-500">Depozito (₺)</label>
-                    <input name="depozito" value={veri.depozito || ""} onChange={handleInputChange} className="w-full p-4 bg-red-50/50 rounded-2xl border-2 border-transparent focus:border-red-500 outline-none font-black text-red-600 text-xl transition-all" placeholder="0" />
-                  </div>
-                )}
               </div>
             </div>
 
-            {/* SEÇİMLİ ALANLAR - SATIR 1 */}
+            {/* SEÇİMLİ ALANLAR */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase ml-2 text-gray-400">İşlem Türü</label>
@@ -118,22 +124,21 @@ const GenelForm = ({ tip, baslik, veri, setVeri, kapat, kaydet, resimYukle, resi
                   <option value="">Seçiniz</option>
                   <option value="Satılık">Satılık</option>
                   <option value="Kiralık">Kiralık</option>
-                  <option value="Devremülk">Devremülk</option>
-                  <option value="Devren Satılık">Devren Satılık</option>
-                  <option value="Devren Kiralık">Devren Kiralık</option>
-                  <option value="Günlük Kiralık">Günlük Kiralık</option>
+                  <option value="Arsa/Tarla Satışı">Arsa/Tarla Satışı</option>
+                  <option value="Tadilat/Dekorasyon">Tadilat/Dekorasyon</option>
+                  <option value="Diğer">Diğer</option>
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase ml-2 text-gray-400">Konut Tipi</label>
+                <label className="text-[10px] font-black uppercase ml-2 text-gray-400">Emlak/İş Tipi</label>
                 <select name="emlakTipi" value={veri.emlakTipi || ""} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
                   <option value="">Seçiniz</option>
                   <option value="Daire">Daire</option>
                   <option value="İşyeri">İşyeri</option>
                   <option value="Villa">Villa</option>
-                  <option value="Müstakil">Müstakil</option>
                   <option value="Arsa">Arsa</option>
                   <option value="Tarla">Tarla</option>
+                  <option value="Müstakil">Müstakil</option>
                 </select>
               </div>
               
@@ -143,15 +148,15 @@ const GenelForm = ({ tip, baslik, veri, setVeri, kapat, kaydet, resimYukle, resi
                     <label className="text-[10px] font-black uppercase ml-2 text-gray-400">Oda Sayısı</label>
                     <select name="odaSayisi" value={veri.odaSayisi || ""} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
                       <option value="">Seçiniz</option>
-                      {["1+0", "1+1", "2+1", "3+1", "4+1", "5+1", "6+1", "7+1", "8+1"].map(o => <option key={o} value={o}>{o}</option>)}
+                      {["1+0", "1+1", "2+1", "3+1", "4+1", "5+1"].map(o => <option key={o} value={o}>{o}</option>)}
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase ml-2 text-gray-400">Mutfak</label>
-                    <select name="mutfak" value={veri.mutfak || ""} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
-                      <option value="">Seçiniz</option>
-                      <option value="Açık Mutfak">Açık Mutfak</option>
-                      <option value="Kapalı Mutfak">Kapalı Mutfak</option>
+                    <label className="text-[10px] font-black uppercase ml-2 text-gray-400">Durum</label>
+                    <select name="durum" value={veri.durum || "AKTİF"} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
+                      <option value="AKTİF">AKTİF</option>
+                      <option value="PASİF">PASİF</option>
+                      <option value="SATILDI">SATILDI / TAMAMLANDI</option>
                     </select>
                   </div>
                 </>
@@ -171,83 +176,45 @@ const GenelForm = ({ tip, baslik, veri, setVeri, kapat, kaydet, resimYukle, resi
               )}
             </div>
 
-            {/* SEÇİMLİ ALANLAR - SATIR 2 (SADECE KONUTLAR İÇİN) */}
-            {!isArsaTarla && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase ml-2 text-gray-400">Bulunduğu Kat</label>
-                  <select name="kat" value={veri.kat || ""} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
-                    <option value="">Seçiniz</option>
-                    {["Zemin Kat", "1", "2", "3", "4", "5", "6", "Bahçe Katı", "Villa Katı", "Bahçe Dubleksi", "Çatı Dubleksi"].map(k => <option key={k} value={k}>{k}</option>)}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase ml-2 text-gray-400">Isıtma</label>
-                  <select name="isitma" value={veri.isitma || ""} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
-                    <option value="">Seçiniz</option>
-                    <option value="Doğalgaz">Doğalgaz</option>
-                    <option value="Yerden Isıtma">Yerden Isıtma</option>
-                    <option value="Klima">Klima</option>
-                    <option value="Sobalı">Sobalı</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase ml-2 text-gray-400">Banyo Sayısı</label>
-                  <select name="banyo" value={veri.banyo || ""} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
-                    <option value="">Seçiniz</option>
-                    {[1, 2, 3, 4, 5].map(b => <option key={b} value={b}>{b}</option>)}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase ml-2 text-gray-400">Site İçerisinde</label>
-                  <select name="siteIci" value={veri.siteIci || ""} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
-                    <option value="">Seçiniz</option>
-                    <option value="Evet">Evet</option>
-                    <option value="Hayır">Hayır</option>
-                  </select>
-                </div>
-              </div>
-            )}
-
-            {/* M2 VE LOKASYON ALANI */}
+            {/* LOKASYON ALANI */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 bg-blue-50/50 rounded-[30px] border border-blue-100">
-               <div className="space-y-2">
+                <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase ml-2 text-blue-400">M² Alanı</label>
                   <input name="m2" value={veri.m2 || ""} onChange={handleInputChange} className="w-full p-4 bg-white rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase" placeholder="150" />
-               </div>
-               <div className="space-y-2">
+                </div>
+                <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase ml-2 text-blue-400">İl</label>
                   <select name="il" value={veri.il || ""} onChange={handleInputChange} className="w-full p-4 bg-white rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
                     <option value="">Seçiniz</option>
                     <option value="Aydın">Aydın</option>
                     <option value="İzmir">İzmir</option>
                   </select>
-               </div>
-               <div className="space-y-2">
+                </div>
+                <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase ml-2 text-blue-400">İlçe</label>
                   <select name="ilce" value={veri.ilce || ""} onChange={handleInputChange} className="w-full p-4 bg-white rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
                     <option value="">Seçiniz</option>
                     {veri.il && Object.keys(lokasyonVerisi[veri.il]).map(i => <option key={i} value={i}>{i}</option>)}
                   </select>
-               </div>
-               <div className="space-y-2">
+                </div>
+                <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase ml-2 text-blue-400">Mahalle</label>
                   <select name="mahalle" value={veri.mahalle || ""} onChange={handleInputChange} className="w-full p-4 bg-white rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
                     <option value="">Seçiniz</option>
                     {veri.il && veri.ilce && lokasyonVerisi[veri.il][veri.ilce]?.map(m => <option key={m} value={m}>{m}</option>)}
                   </select>
-               </div>
+                </div>
             </div>
 
             {/* AÇIKLAMA */}
             <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase ml-2 text-gray-400">İlan Açıklaması</label>
-                <textarea name="aciklama" value={veri.aciklama || ""} onChange={handleInputChange} rows={4} className="w-full p-6 bg-gray-50 rounded-[30px] border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase transition-all resize-none placeholder:text-gray-300" placeholder="İlan hakkında detaylı bilgi giriniz..."></textarea>
+                <label className="text-[10px] font-black uppercase ml-2 text-gray-400">{tip === "talep" ? "İş/Talep Detayları" : "İlan Açıklaması"}</label>
+                <textarea name="aciklama" value={veri.aciklama || ""} onChange={handleInputChange} rows={4} className="w-full p-6 bg-gray-50 rounded-[30px] border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase transition-all resize-none placeholder:text-gray-300" placeholder="DETAYLI BİLGİ GİRİNİZ..."></textarea>
             </div>
 
             {/* KAYDET BUTONU */}
             <button type="submit" className="w-full bg-[#0A192F] text-[#FFD700] py-6 rounded-[30px] font-black text-sm uppercase tracking-[4px] shadow-2xl hover:bg-black hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3">
-              <Save size={20} /> {veri.id ? "DEĞİŞİKLİKLERİ KAYDET" : "İLANI YAYINLA"}
+              <Save size={20} /> {veri.id ? "DEĞİŞİKLİKLERİ KAYDET" : (tip === "talep" ? "TALEBİ OLUŞTUR" : "İLANI YAYINLA")}
             </button>
 
           </form>
