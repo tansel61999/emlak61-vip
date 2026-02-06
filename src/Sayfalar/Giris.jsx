@@ -3,8 +3,7 @@ import { yetki, saglayici } from '../firebaseYapilandirma';
 import { signInWithPopup } from 'firebase/auth';
 
 const Giris = () => {
-  // NOT: Burada useNavigate() kullanmıyoruz çünkü App.js Router kullanmıyor.
-  // Giriş yapınca App.js kullanıcıyı algılayıp sayfayı kendisi açacak.
+  // NOT: App.jsx kullanıcıyı algılayıp AnaPanel'i otomatik açacağı için yönlendirme gerekmez.
 
   const googleIleGiris = async () => {
     try {
@@ -14,10 +13,9 @@ const Giris = () => {
       });
 
       await signInWithPopup(yetki, saglayici);
-      // navigate('/ilan-yonetimi'); satırını sildik çünkü App.js bunu hallediyor.
     } catch (hata) {
       console.error("Giriş hatası:", hata);
-      alert("Giriş başarısız!");
+      alert("Giriş başarısız! Lütfen tekrar deneyin.");
     }
   };
 
@@ -44,8 +42,8 @@ const Giris = () => {
           GOOGLE İLE GİRİŞ YAP
         </button>
 
-        <p className="mt-8 text-[10px] text-gray-300 font-bold uppercase tracking-tighter">
-          Sadece yetkilendirilmiş kurumsal e-posta adresleri ile giriş yapılabilir.
+        <p className="mt-8 text-[10px] text-gray-300 font-bold uppercase tracking-tighter leading-relaxed">
+          Sadece yetkilendirilmiş kurumsal e-posta adresleri <br /> ile giriş yapılabilir.
         </p>
       </div>
 
