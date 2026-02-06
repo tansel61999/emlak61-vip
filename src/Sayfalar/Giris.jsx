@@ -1,20 +1,29 @@
 import React from 'react';
-import { yetki, saglayici } from '../firebaseYapilandirma';
-import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { yetki } from '../firebaseYapilandirma';
+import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 
 const Giris = () => {
   const googleIleGiris = async () => {
     try {
-      // Her seferinde hesap seçme penceresini zorunlu hale getirir
+      // Önce mevcut oturum kalıntılarını temizle (Zorunlu)
+      await signOut(yetki);
+
       const googleSaglayici = new GoogleAuthProvider();
+      
+      // Her seferinde hesap seçme penceresini zorunlu hale getirir
       googleSaglayici.setCustomParameters({
-        prompt: 'select_account'
+        prompt: 'select_account',
+        // Ekstra güvenlik: Tarayıcıya bu girişin "taze" olduğunu söyler
+        auth_type: 'reauthenticate'
       });
 
       await signInWithPopup(yetki, googleSaglayici);
     } catch (hata) {
       console.error("Giriş hatası:", hata);
-      alert("Giriş başarısız!");
+      // Kullanıcı pencereyi kapatırsa hata vermemesi için kontrol
+      if (hata.code !== 'auth/cancelled-popup-request') {
+        alert("Giriş başarısız!");
+      }
     }
   };
 
