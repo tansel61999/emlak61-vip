@@ -69,6 +69,32 @@ const MusteriYonetimi = () => {
     }
   };
 
+// ... (Dosyanın başı aynı)
+
+  const arsivle = async (id) => {
+    // Müşterinin durumunu 'Arşivlendi' yaparak ana listeden gizliyoruz
+    await updateDoc(doc(veritabani, "musteriler", id), { 
+      durum: "Arşivlendi",
+      arsivTarihi: serverTimestamp() 
+    });
+  };
+
+// ... (Listeleme kısmında filtre ekliyoruz)
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {musteriler
+      .filter(m => m.durum !== "Arşivlendi") // SADECE ARŞİVLENMEMİŞ OLANLARI GÖSTER
+      .filter(m => m.ad?.toLowerCase().includes(aramaMetni))
+      .map((m) => (
+        // ... (Kart tasarımı aynı)
+        <button 
+          onClick={() => arsivle(m.id)} 
+          className="flex-1 bg-[#0A192F] text-[#FFD700] p-4 rounded-2xl font-black text-xs"
+        >
+          TAMAMLANDI / ARŞİVLE
+        </button>
+      ))}
+  </div>
+  
   const whatsappMesaj = (tel) => {
     const temizTel = tel.replace(/\s/g, '');
     window.open(`https://wa.me/90${temizTel}`, '_blank');
