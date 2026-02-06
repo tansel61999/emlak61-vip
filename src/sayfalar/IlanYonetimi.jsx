@@ -3,8 +3,7 @@ import { veritabani, depolama } from '../firebaseYapilandirma';
 import { getAuth, onAuthStateChanged, signOut, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { collection, query, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, orderBy, getDocs, where } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { X, Search, Image as ImageIcon, Loader2, Edit3, Trash2, MapPin, UserPlus, ShieldCheck, LogOut, LayoutGrid, Briefcase, Plus, Archive, CheckCircle2, AlertCircle } from 'lucide-react';
-// YENİ FORM BİLEŞENİNİ IMPORT EDİYORUZ
+import { X, Search, Image as ImageIcon, Loader2, Edit3, Trash2, MapPin, UserPlus, ShieldCheck, LogOut, LayoutGrid, Briefcase, Plus, Archive, CheckCircle2, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import GenelForm from '../bilesenler/GenelForm';
 
 const IlanYonetimi = () => {
@@ -199,16 +198,17 @@ const IlanYonetimi = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#E6EAEF] p-4 pb-20 font-sans">
+    <div className="min-h-screen bg-[#E6EAEF] p-4 pb-20 font-sans text-[#0A192F]">
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Üst Header Kısmı */}
-        <div className="flex flex-col gap-4 bg-white p-6 rounded-[32px] shadow-sm border">
+        
+        {/* HEADER */}
+        <div className="bg-white p-6 rounded-[32px] shadow-sm border space-y-6">
           <div className="flex justify-between items-center">
              <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-[#0A192F] flex items-center justify-center text-white font-black text-sm">{kullaniciBilgi?.ad?.charAt(0)}</div>
                 <div className="flex flex-col">
-                  <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">HOŞ GELDİN</span>
-                  <span className="text-xs font-black text-[#0A192F] uppercase">{kullaniciBilgi?.ad}</span>
+                  <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest leading-none">HOŞ GELDİN</span>
+                  <span className="text-xs font-black uppercase">{kullaniciBilgi?.ad}</span>
                 </div>
              </div>
              <div className="flex items-center gap-2">
@@ -223,18 +223,22 @@ const IlanYonetimi = () => {
              </div>
           </div>
 
-          <div className="h-px bg-gray-100 w-full" />
-
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2">
-                <h2 className="text-2xl font-black text-[#0A192F]">EMLAK61</h2>
+                <h2 className="text-2xl font-black italic tracking-tighter">EMLAK61</h2>
                 {isAdmin && <span className="bg-red-500 text-white text-[9px] px-2 py-0.5 rounded font-black">YÖNETİCİ</span>}
             </div>
             
-            <div className="flex bg-gray-100 p-1 rounded-2xl gap-1 overflow-x-auto w-full md:w-auto">
-              <button onClick={() => setGorunum("OFIS")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-[10px] transition-all whitespace-nowrap ${gorunum === "OFIS" ? "bg-white text-[#0A192F] shadow-sm" : "text-gray-500 hover:bg-gray-200"}`}><LayoutGrid size={14} /> OFİS İLANLARI</button>
-              <button onClick={() => setGorunum("ILANLARIM")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-[10px] transition-all whitespace-nowrap ${gorunum === "ILANLARIM" ? "bg-white text-[#0A192F] shadow-sm" : "text-gray-500 hover:bg-gray-200"}`}><Briefcase size={14} /> İLANLARIM</button>
-              <button onClick={() => setGorunum("ARSIV")} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-[10px] transition-all whitespace-nowrap ${gorunum === "ARSIV" ? "bg-white text-[#0A192F] shadow-sm" : "text-gray-500 hover:bg-gray-200"}`}><Archive size={14} /> ARŞİV</button>
+            <div className="flex bg-gray-100 p-1.5 rounded-2xl gap-1 overflow-x-auto w-full md:w-auto">
+              {[
+                { id: "OFIS", icon: <LayoutGrid size={14}/>, label: "OFİS İLANLARI" },
+                { id: "ILANLARIM", icon: <Briefcase size={14}/>, label: "İLANLARIM" },
+                { id: "ARSIV", icon: <Archive size={14}/>, label: "ARŞİV" }
+              ].map(tab => (
+                <button key={tab.id} onClick={() => setGorunum(tab.id)} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-[10px] transition-all whitespace-nowrap ${gorunum === tab.id ? "bg-white text-[#0A192F] shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+                  {tab.icon} {tab.label}
+                </button>
+              ))}
             </div>
 
             <button onClick={() => setFormAcik(true)} className="w-full md:w-auto bg-[#0A192F] text-[#FFD700] px-8 py-3 rounded-2xl font-black shadow-lg hover:bg-black transition-all uppercase text-xs flex items-center justify-center gap-2">
@@ -248,48 +252,38 @@ const IlanYonetimi = () => {
           </div>
         </div>
 
-        {/* İlan Listeleme Kartları */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {/* ILAN LISTESI */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {yukleniyor ? (
             <div className="col-span-full py-20 text-center flex flex-col items-center gap-4">
               <Loader2 className="animate-spin text-[#0A192F]" size={48} />
-              <span className="font-black text-[#0A192F] text-xs uppercase tracking-widest">Veriler Yükleniyor...</span>
+              <span className="font-black text-xs uppercase tracking-widest">Veriler Yükleniyor...</span>
             </div>
           ) : filtrelenmisIlanlar.length === 0 ? (
-            <div className="col-span-full py-24 text-center text-gray-400 font-bold uppercase tracking-widest bg-white rounded-[40px] border-2 border-dashed border-gray-200">Gösterilecek ilan bulunamadı</div>
+            <div className="col-span-full py-24 text-center text-gray-400 font-bold uppercase tracking-widest bg-white rounded-[40px] border-2 border-dashed">Gösterilecek ilan bulunamadı</div>
           ) : (
             filtrelenmisIlanlar.map((i) => (
-              <div key={i.id} className="bg-white rounded-[40px] border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition-all relative flex flex-col group">
-                <div className="absolute top-4 right-4 z-10 flex gap-2">
-                    {(isAdmin || i.ekleyen === kullaniciBilgi?.eposta) && (
-                      <>
-                        <button onClick={() => { setDuzenlenenId(i.id); setYeniIlan(i); setFormAcik(true); }} className="p-2.5 bg-white/90 backdrop-blur text-blue-600 rounded-xl shadow-lg hover:bg-blue-600 hover:text-white transition-all"><Edit3 size={18} /></button>
-                        <button onClick={() => ilanSil(i.id)} className="p-2.5 bg-white/90 backdrop-blur text-red-600 rounded-xl shadow-lg hover:bg-red-600 hover:text-white transition-all"><Trash2 size={18} /></button>
-                      </>
-                    )}
-                </div>
-                <div className="h-60 cursor-pointer relative overflow-hidden" onClick={() => { setDetayIlan(i); setAktifResimIdx(0); }}>
-                   {i.resimler?.[0] ? <img src={i.resimler[0]} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="" /> : <div className="h-full bg-gray-50 flex items-center justify-center text-gray-300 font-bold uppercase">Resim Yok</div>}
-                   <div className="absolute top-4 left-4 bg-[#0A192F] text-white text-[9px] px-4 py-1.5 rounded-full font-black uppercase shadow-lg border border-white/20">{i.emlakTipi}</div>
+              <div key={i.id} onClick={() => { setDetayIlan(i); setAktifResimIdx(0); }} className="bg-white rounded-[40px] border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition-all relative flex flex-col group cursor-pointer">
+                <div className="h-64 relative overflow-hidden">
+                   {i.resimler?.[0] ? <img src={i.resimler[0]} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="" /> : <div className="h-full bg-gray-50 flex items-center justify-center text-gray-300 font-bold uppercase text-[10px]">Resim Yok</div>}
+                   <div className="absolute top-4 left-4 bg-[#0A192F] text-white text-[9px] px-4 py-1.5 rounded-full font-black uppercase shadow-lg border border-white/10">{i.emlakTipi}</div>
+                   {i.durum !== "AKTİF" && <div className="absolute top-4 right-4 bg-red-600 text-white text-[9px] px-4 py-1.5 rounded-full font-black uppercase shadow-lg border border-white/10">{i.durum}</div>}
                 </div>
 
                 <div className="p-6 flex-1 flex flex-col">
-                  <div className="text-2xl font-black text-[#0A192F] mb-1">{formatPara(i.fiyat)} ₺</div>
-                  <h3 className="font-bold text-gray-700 uppercase line-clamp-1 mb-3 text-sm">{i.baslik}</h3>
-                  <div className="flex items-start gap-2 mb-6 text-gray-500">
-                    <MapPin size={14} className="mt-0.5 text-blue-500 shrink-0" />
-                    <span className="text-[10px] font-bold uppercase">{i.ilce} / {i.mahalle}</span>
+                  <div className="text-2xl font-black mb-1">{formatPara(i.fiyat)} ₺</div>
+                  <h3 className="font-bold text-gray-700 uppercase line-clamp-1 mb-3 text-xs">{i.baslik}</h3>
+                  <div className="flex items-center gap-1.5 mb-6 text-gray-500">
+                    <MapPin size={12} className="text-blue-500" />
+                    <span className="text-[10px] font-black uppercase">{i.ilce} / {i.mahalle}</span>
                   </div>
-                  <div className="flex justify-between items-center mt-auto pt-4 border-t border-gray-100 mb-6">
-                    <div className="flex items-center gap-2 bg-gray-50 p-1.5 pr-4 rounded-2xl">
-                      <div className="w-8 h-8 bg-[#0A192F] rounded-full flex items-center justify-center text-white text-[10px] font-black">{i.ekleyenAd?.charAt(0)}</div>
-                      <span className="text-[10px] font-black text-[#0A192F] uppercase">{i.ekleyenAd || "Sistem"}</span>
+                  
+                  <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-50">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-[10px] font-black">{i.ekleyenAd?.charAt(0)}</div>
+                      <span className="text-[10px] font-black uppercase">{i.ekleyenAd}</span>
                     </div>
-                    <div className="text-[9px] font-bold text-gray-400 uppercase">{tarihFormatla(i.tarih)}</div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => durumuGuncelle(i.id, i.durum === "SATILDI" ? "AKTİF" : "SATILDI")} className={`flex-1 py-3 rounded-xl font-black text-[9px] ${i.durum === "SATILDI" ? "bg-green-600 text-white" : "bg-green-50 text-green-700"}`}>SATILDI</button>
-                    <button onClick={() => durumuGuncelle(i.id, i.durum === "PASİF" ? "AKTİF" : "PASİF")} className={`flex-1 py-3 rounded-xl font-black text-[9px] ${i.durum === "PASİF" ? "bg-red-600 text-white" : "bg-red-50 text-red-700"}`}>PASİF</button>
+                    <span className="text-[9px] font-bold text-gray-400 uppercase">{tarihFormatla(i.tarih)}</span>
                   </div>
                 </div>
               </div>
@@ -298,7 +292,95 @@ const IlanYonetimi = () => {
         </div>
       </div>
 
-      {/* YENİ MODÜLER FORMUMUZU ÇAĞIRIYORUZ */}
+      {/* DETAY MODAL (YENİ MODERN TASARIM) */}
+      {detayIlan && (
+        <div className="fixed inset-0 bg-[#0A192F]/98 z-[1000] overflow-y-auto" onClick={() => setDetayIlan(null)}>
+            <div className="min-h-screen flex items-center justify-center p-4 md:p-10">
+              <div className="bg-white rounded-[50px] w-full max-w-7xl overflow-hidden shadow-2xl flex flex-col md:flex-row relative" onClick={e => e.stopPropagation()}>
+                
+                {/* SOL: GÖRSEL ALANI */}
+                <div className="md:w-3/5 bg-gray-50 relative flex items-center justify-center h-[400px] md:h-auto">
+                    <button onClick={() => setDetayIlan(null)} className="absolute top-8 left-8 z-50 bg-[#0A192F] text-white p-4 rounded-full hover:scale-110 transition-all shadow-xl"><X size={24}/></button>
+                    
+                    {detayIlan.resimler?.[aktifResimIdx] && (
+                      <img src={detayIlan.resimler[aktifResimIdx]} className="w-full h-full object-contain" alt="" />
+                    )}
+
+                    {detayIlan.resimler?.length > 1 && (
+                      <div className="absolute bottom-10 left-10 right-10 flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                         {detayIlan.resimler.map((img, idx) => (
+                           <button key={idx} onClick={() => setAktifResimIdx(idx)} className={`flex-shrink-0 w-20 h-20 rounded-2xl overflow-hidden border-4 transition-all ${aktifResimIdx === idx ? 'border-blue-500 scale-105' : 'border-white/50 opacity-60'}`}>
+                             <img src={img} className="w-full h-full object-cover" />
+                           </button>
+                         ))}
+                      </div>
+                    )}
+                </div>
+
+                {/* SAĞ: BİLGİ ALANI */}
+                <div className="md:w-2/5 p-8 md:p-12 overflow-y-auto bg-white flex flex-col max-h-[90vh]">
+                    <div className="mb-10 flex justify-between items-start">
+                      <div>
+                        <div className="text-5xl font-black tracking-tighter mb-2">{formatPara(detayIlan.fiyat)} <span className="text-2xl font-bold">₺</span></div>
+                        <span className="bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">{detayIlan.islemTuru} / {detayIlan.emlakTipi}</span>
+                      </div>
+                      
+                      {(isAdmin || detayIlan.ekleyen === kullaniciBilgi?.eposta) && (
+                        <div className="flex gap-2">
+                          <button onClick={() => { setDuzenlenenId(detayIlan.id); setYeniIlan(detayIlan); setFormAcik(true); setDetayIlan(null); }} className="p-4 bg-gray-50 text-blue-600 rounded-3xl hover:bg-blue-600 hover:text-white transition-all"><Edit3 size={20}/></button>
+                          <button onClick={() => ilanSil(detayIlan.id)} className="p-4 bg-gray-50 text-red-600 rounded-3xl hover:bg-red-600 hover:text-white transition-all"><Trash2 size={20}/></button>
+                        </div>
+                      )}
+                    </div>
+
+                    <h1 className="text-xl font-black uppercase mb-10 leading-tight">{detayIlan.baslik}</h1>
+
+                    <div className="grid grid-cols-2 gap-4 mb-10">
+                       {[
+                         { l: "ODA", v: detayIlan.odaSayisi },
+                         { l: "M²", v: detayIlan.m2 },
+                         { l: "KAT", v: detayIlan.kat },
+                         { l: "ISITMA", v: detayIlan.isitma },
+                         { l: "ADA/PARSEL", v: `${detayIlan.ada || '-'}/${detayIlan.parsel || '-'}` },
+                         { l: "KONUM", v: detayIlan.ilce }
+                       ].map((item, idx) => (
+                         <div key={idx} className="bg-gray-50 p-5 rounded-[25px] border border-gray-100">
+                           <div className="text-[9px] font-black text-gray-400 mb-1 uppercase">{item.l}</div>
+                           <div className="text-xs font-black uppercase">{item.v || '-'}</div>
+                         </div>
+                       ))}
+                    </div>
+
+                    <div className="space-y-4 mb-10">
+                       <h4 className="text-[10px] font-black text-blue-600 uppercase tracking-widest">İlan Açıklaması</h4>
+                       <p className="text-sm font-bold text-gray-600 leading-relaxed uppercase whitespace-pre-wrap">{detayIlan.aciklama}</p>
+                    </div>
+
+                    <div className="mt-auto pt-8 border-t border-gray-100 flex items-center justify-between">
+                       <div className="flex items-center gap-4">
+                         <div className="w-12 h-12 bg-[#0A192F] rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-lg">{detayIlan.ekleyenAd?.charAt(0)}</div>
+                         <div>
+                           <div className="text-[9px] font-black text-gray-400 uppercase">DANIŞMAN</div>
+                           <div className="text-xs font-black uppercase">{detayIlan.ekleyenAd}</div>
+                         </div>
+                       </div>
+                       <div className="text-right">
+                          <div className="text-[9px] font-black text-gray-400 uppercase">İLAN TARİHİ</div>
+                          <div className="text-xs font-black">{tarihFormatla(detayIlan.tarih)}</div>
+                       </div>
+                    </div>
+
+                    <div className="mt-8 grid grid-cols-2 gap-3">
+                       <button onClick={() => durumuGuncelle(detayIlan.id, detayIlan.durum === "SATILDI" ? "AKTİF" : "SATILDI")} className={`py-4 rounded-2xl font-black text-[10px] transition-all ${detayIlan.durum === "SATILDI" ? "bg-green-600 text-white" : "bg-green-50 text-green-700 hover:bg-green-100"}`}>SATILDI OLARAK İŞARETLE</button>
+                       <button onClick={() => durumuGuncelle(detayIlan.id, detayIlan.durum === "PASİF" ? "AKTİF" : "PASİF")} className={`py-4 rounded-2xl font-black text-[10px] transition-all ${detayIlan.durum === "PASİF" ? "bg-red-600 text-white" : "bg-red-50 text-red-700 hover:bg-red-100"}`}>PASİFE AL / ARŞİVLE</button>
+                    </div>
+                </div>
+              </div>
+            </div>
+        </div>
+      )}
+
+      {/* GENEL FORM MODÜLÜ */}
       {formAcik && (
         <GenelForm 
           tip="ilan"
@@ -312,45 +394,25 @@ const IlanYonetimi = () => {
         />
       )}
 
-      {/* Detay ve Danışman Modalları */}
+      {/* DANIŞMAN PANELİ */}
       {danismanPanelAcik && isAdmin && (
         <div className="fixed inset-0 bg-[#0A192F]/90 backdrop-blur-md flex items-center justify-center z-[900] p-4">
-            <div className="bg-white rounded-[40px] w-full max-w-md p-8">
-                <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xl font-black text-[#0A192F]">DANIŞMANLAR</h3>
-                    <button onClick={() => setDanismanPanelAcik(false)}><X size={24}/></button>
+            <div className="bg-white rounded-[40px] w-full max-w-md p-8 shadow-2xl">
+                <div className="flex justify-between items-center mb-8">
+                    <h3 className="text-xl font-black italic tracking-tighter">DANIŞMAN YÖNETİMİ</h3>
+                    <button onClick={() => setDanismanPanelAcik(false)} className="p-2 bg-gray-100 rounded-full"><X size={20}/></button>
                 </div>
-                <div className="flex gap-2 mb-6">
-                    <input type="text" className="flex-1 p-4 bg-gray-50 rounded-2xl font-bold outline-none" placeholder="E-POSTA" value={yeniDanismanIsmi} onChange={e => setYeniDanismanIsmi(e.target.value)} />
-                    <button onClick={danismanEkle} className="bg-[#0A192F] text-white px-5 rounded-2xl"><Plus/></button>
+                <div className="flex gap-2 mb-8">
+                    <input type="text" className="flex-1 p-4 bg-gray-50 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-blue-500 transition-all text-xs" placeholder="E-POSTA ADRESİ" value={yeniDanismanIsmi} onChange={e => setYeniDanismanIsmi(e.target.value)} />
+                    <button onClick={danismanEkle} className="bg-[#0A192F] text-white px-6 rounded-2xl hover:bg-black transition-all shadow-lg"><Plus size={20}/></button>
                 </div>
-                <div className="space-y-2 max-h-64 overflow-y-auto">
+                <div className="space-y-2 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
                     {danismanlar.map(d => (
-                        <div key={d.id} className="flex justify-between items-center p-4 bg-gray-50 rounded-2xl">
-                            <span className="font-bold text-xs uppercase">{d.isim}</span>
-                            <button onClick={() => danismanSil(d.id)} className="text-red-500"><Trash2 size={16}/></button>
+                        <div key={d.id} className="flex justify-between items-center p-4 bg-gray-50 rounded-2xl border border-gray-100 group">
+                            <span className="font-black text-[10px] uppercase tracking-wider">{d.isim}</span>
+                            <button onClick={() => danismanSil(d.id)} className="text-red-400 hover:text-red-600 transition-all p-2"><Trash2 size={16}/></button>
                         </div>
                     ))}
-                </div>
-            </div>
-        </div>
-      )}
-
-      {detayIlan && (
-        <div className="fixed inset-0 bg-[#0A192F]/95 backdrop-blur-xl flex items-center justify-center z-[1000] p-4" onClick={() => setDetayIlan(null)}>
-            <div className="bg-white rounded-[40px] w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col md:flex-row shadow-2xl" onClick={e => e.stopPropagation()}>
-                <div className="md:w-2/3 bg-black relative flex items-center justify-center min-h-[300px]">
-                    <button onClick={() => setDetayIlan(null)} className="absolute top-6 left-6 z-50 bg-white/20 text-white p-3 rounded-full"><X size={24}/></button>
-                    {detayIlan.resimler?.[aktifResimIdx] && <img src={detayIlan.resimler[aktifResimIdx]} className="w-full h-full object-contain" alt="" />}
-                </div>
-                <div className="md:w-1/3 p-10 overflow-y-auto bg-white">
-                    <h2 className="text-4xl font-black text-[#0A192F] mb-2">{formatPara(detayIlan.fiyat)} ₺</h2>
-                    <h3 className="text-lg font-bold text-gray-700 uppercase mb-8">{detayIlan.baslik}</h3>
-                    <div className="grid grid-cols-2 gap-4 mb-10 text-xs font-black">
-                        <div className="bg-gray-50 p-4 rounded-2xl uppercase">Ada/Parsel: {detayIlan.ada || "-"}/{detayIlan.parsel || "-"}</div>
-                        <div className="bg-gray-50 p-4 rounded-2xl uppercase">Konum: {detayIlan.ilce}</div>
-                    </div>
-                    <p className="text-sm text-gray-600 font-bold whitespace-pre-wrap uppercase">{detayIlan.aciklama}</p>
                 </div>
             </div>
         </div>
