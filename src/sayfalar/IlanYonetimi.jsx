@@ -95,6 +95,25 @@ const IlanYonetimi = () => {
     return new Intl.NumberFormat('tr-TR').format(deger);
   };
 
+  const resimleriYukle = async (files) => {
+    if (!files || files.length === 0) return;
+    setResimYukleniyor(true);
+    const yuklenenURLler = [];
+    try {
+      for (const file of files) {
+        const storageRef = ref(depolama, `ilanlar/${Date.now()}_${file.name}`);
+        await uploadBytes(storageRef, file);
+        const url = await getDownloadURL(storageRef);
+        yuklenenURLler.push(url);
+      }
+      setYeniIlan(prev => ({ ...prev, resimler: [...(prev.resimler || []), ...yuklenenURLler] }));
+    } catch (error) {
+      alert("Resim yükleme hatası!");
+    } finally {
+      setResimYukleniyor(false);
+    }
+  };
+
   const ilanKaydet = async (e) => {
     e.preventDefault();
     try {
@@ -283,15 +302,17 @@ const IlanYonetimi = () => {
       {formAcik && (
         <GenelForm 
           tip="ilan"
-          baslik={duzenlenenId ? "İlanı Güncelle" : "Yeni İlan Ekle"}
+          baslik={duzenlenenId ? "İLAN GÜNCELLE" : "YENİ İLAN EKLE"}
           veri={yeniIlan}
           setVeri={setYeniIlan}
           kapat={formuKapat}
           kaydet={ilanKaydet}
+          resimYukle={resimleriYukle}
+          resimYukleniyor={resimYukleniyor}
         />
       )}
 
-      {/* Detay ve Danışman Modalları (Aynı Kaldı) */}
+      {/* Detay ve Danışman Modalları */}
       {danismanPanelAcik && isAdmin && (
         <div className="fixed inset-0 bg-[#0A192F]/90 backdrop-blur-md flex items-center justify-center z-[900] p-4">
             <div className="bg-white rounded-[40px] w-full max-w-md p-8">
