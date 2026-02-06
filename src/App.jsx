@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import Giris from './Sayfalar/Giris.jsx';
+import Giris from './sayfalar/Giris';
 import AnaPanel from './AnaPanel';
 
 const App = () => {
