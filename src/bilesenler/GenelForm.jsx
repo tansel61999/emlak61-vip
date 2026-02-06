@@ -1,152 +1,207 @@
-import React from 'react';
-import { X, Camera, Loader2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Image as ImageIcon, Loader2, Save, Trash2 } from 'lucide-react';
 
-const YerelVeri = {
-  "Aydın": {
-    "Efeler": ["Adnan Menderes", "Mimar Sinan", "Girne", "Cumhuriyet", "Yedi Eylül", "Zeybek"],
-    "Kuşadası": ["Türkmen", "İkiçeşmelik", "Kadınlar Denizi", "Soğucak", "Güzelçamlı", "Davutlar", "Ege", "Yavusu Sultan Selim"],
-    "Didim": ["Altınkum", "Efeler", "Cumhuriyet", "Mavişehir", "Hisar", "Akyeniköy"],
-    "Söke": ["Yenikent", "Atatürk", "Konak", "Cumhuriyet", "Çeltikçi"],
-    "Nazilli": ["Altıntaş", "İsabeyli", "Yıldıztepe", "Cumhuriyet", "Turan"]
-  },
-  "İzmir": {
-    "Çeşme": ["Alaçatı", "Ilıca", "Reisdere", "Musalla", "Sakarya"],
-    "Bornova": ["Erzene", "Kazımdirik", "Mevlana", "Doğanlar", "Işıklar"],
-    "Karşıyaka": ["Bostanlı", "Mavişehir", "Bahçelievler", "Aksoy", "Alaybey"],
-    "Konak": ["Güzelyalı", "Alsancak", "Hatay", "Köztepe", "Kahramanlar"],
-    "Urla": ["İskele", "Zeytinalanı", "Yelaltı", "Güvendik", "Altıntaş"]
-  }
-};
-
-const GenelForm = ({ tip, kapat, veri, setVeri, kaydet, baslik, resimYukle, resimYukleniyor }) => {
-  
-  const fiyatDegis = (e) => {
-    const hamDeger = e.target.value.replace(/\D/g, "");
-    const formatli = new Intl.NumberFormat('tr-TR').format(hamDeger);
-    setVeri({ ...veri, fiyat: formatli });
+const GenelForm = ({ tip, baslik, veri, setVeri, kapat, kaydet, resimYukle, resimYukleniyor }) => {
+  // Lokasyon Verileri
+  const lokasyonVerisi = {
+    "Aydın": {
+      "Kuşadası": ["Kadınlar Denizi", "Soğucak", "Ege", "İkiçeşmelik", "Yavansu", "Güzelçamlı", "Davutlar"],
+      "Didim": ["Altınkum", "Efeler", "Cumhuriyet", "Mavişehir"],
+      "Efeler": ["Mimar Sinan", "Yedi Eylül", "Zeybek"]
+    },
+    "İzmir": {
+      "Çeşme": ["Alaçatı", "Ilıca", "Boyalık", "Reisdere"],
+      "Urla": ["İskele", "Zeytinalanı", "Gülbahçe"],
+      "Seferihisar": ["Sığacık", "Akarca", "Camikebir"]
+    }
   };
 
-  const arsaMi = veri.konutTipi === "Arsa" || veri.konutTipi === "Tarla";
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    if (name === "fiyat") {
+      const sadeceSayi = value.replace(/\D/g, "");
+      const formatli = new Intl.NumberFormat('tr-TR').format(sadeceSayi);
+      setVeri({ ...veri, [name]: formatli });
+    } else {
+      setVeri({ ...veri, [name]: value });
+    }
+  };
 
   return (
-    <div className="fixed inset-0 bg-[#0A192F]/90 backdrop-blur-md z-[1000] flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[40px] shadow-2xl relative">
-        
-        {/* Header */}
-        <div className="sticky top-0 bg-white p-8 border-b z-20 flex justify-between items-center">
-          <h2 className="text-2xl font-black text-[#0A192F] uppercase">{baslik}</h2>
-          <button onClick={kapat} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><X size={28} /></button>
-        </div>
-
-        <form onSubmit={kaydet} className="p-8 space-y-6">
+    <div className="fixed inset-0 bg-[#0A192F]/95 backdrop-blur-xl z-[2000] overflow-y-auto font-sans text-[#0A192F]">
+      <div className="min-h-screen flex items-center justify-center p-4 md:p-8">
+        <div className="bg-white rounded-[40px] w-full max-w-4xl shadow-2xl overflow-hidden relative">
           
-          {/* Resim Yükleme Alanı */}
-          <div className="group relative w-full h-40 border-4 border-dashed border-gray-100 rounded-[2rem] flex flex-col items-center justify-center hover:border-[#FFD700] transition-all cursor-pointer overflow-hidden">
-            <input 
-              type="file" 
-              multiple 
-              accept="image/*"
-              className="absolute inset-0 opacity-0 cursor-pointer z-50" 
-              onChange={(e) => {
-                if(e.target.files.length > 0) resimYukle(e.target.files);
-              }} 
-            />
-            {resimYukleniyor ? (
-              <Loader2 className="animate-spin text-blue-600" size={40} />
-            ) : (
-              <>
-                <Camera size={40} className="text-gray-300 group-hover:text-[#FFD700]" />
-                <span className="text-[10px] font-black text-gray-400 mt-2 uppercase">RESİMLERİ SEÇ VEYA SÜRÜKLE</span>
-              </>
-            )}
-          </div>
-
-          {/* Resim Önizleme */}
-          <div className="flex gap-2 flex-wrap">
-            {veri.resimler?.map((url, index) => (
-              <div key={index} className="relative w-20 h-20 rounded-2xl overflow-hidden border-2 border-gray-100 shadow-sm">
-                <img src={url} className="w-full h-full object-cover" alt="" />
-                <button 
-                  type="button"
-                  onClick={() => setVeri({...veri, resimler: veri.resimler.filter((_, i) => i !== index)})}
-                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:scale-110 transition-transform"
-                >
-                  <X size={12} />
-                </button>
-              </div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <select className="p-4 bg-gray-50 rounded-2xl font-bold border-2 border-transparent focus:border-blue-500 outline-none"
-              value={veri.islemTuru} onChange={e => setVeri({...veri, islemTuru: e.target.value})} required>
-              <option value="">İŞLEM TÜRÜ</option>
-              <option value="Satılık">SATILIK</option>
-              <option value="Kiralık">KİRALIK</option>
-            </select>
-
-            <input type="text" placeholder="FİYAT" className="p-4 bg-gray-50 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-blue-500"
-              value={veri.fiyat} onChange={fiyatDegis} required />
-          </div>
-
-          <input type="text" placeholder="İLAN BAŞLIĞI" className="w-full p-4 bg-gray-50 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-blue-500"
-            value={veri.baslik} onChange={e => setVeri({...veri, baslik: e.target.value.toUpperCase()})} required />
-
-          {/* Konum Seçimi (İl / İlçe / Mahalle) */}
-          <div className="grid grid-cols-3 gap-4">
-            <select className="p-4 bg-gray-50 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-blue-500"
-              value={veri.il} onChange={e => setVeri({...veri, il: e.target.value, ilce: "", mahalle: ""})} required>
-              <option value="">İL SEÇ</option>
-              <option value="Aydın">AYDIN</option>
-              <option value="İzmir">İZMİR</option>
-            </select>
-
-            <select className="p-4 bg-gray-50 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-blue-500"
-              value={veri.ilce} onChange={e => setVeri({...veri, ilce: e.target.value, mahalle: ""})} disabled={!veri.il} required>
-              <option value="">İLÇE SEÇ</option>
-              {veri.il && Object.keys(YerelVeri[veri.il]).map(ilce => (
-                <option key={ilce} value={ilce}>{ilce.toUpperCase()}</option>
-              ))}
-            </select>
-
-            <select className="p-4 bg-gray-50 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-blue-500"
-              value={veri.mahalle} onChange={e => setVeri({...veri, mahalle: e.target.value})} disabled={!veri.ilce} required>
-              <option value="">MAHALLE SEÇ</option>
-              {veri.ilce && YerelVeri[veri.il][veri.ilce].map(mah => (
-                <option key={mah} value={mah}>{mah.toUpperCase()}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <select className="p-4 bg-gray-50 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-blue-500"
-              value={veri.konutTipi} onChange={e => setVeri({...veri, konutTipi: e.target.value})} required>
-              <option value="">KONUT TİPİ</option>
-              <option value="Daire">DAİRE</option>
-              <option value="Villa">VİLLA</option>
-              <option value="Arsa">ARSA</option>
-              <option value="Tarla">TARLA</option>
-            </select>
-            <input type="text" placeholder="M²" className="p-4 bg-gray-50 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-blue-500"
-              value={veri.m2} onChange={e => setVeri({...veri, m2: e.target.value})} required />
-          </div>
-
-          {arsaMi && (
-            <div className="grid grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-300">
-              <input type="text" placeholder="ADA" className="p-4 bg-yellow-50 rounded-2xl font-bold outline-none border-2 border-yellow-200"
-                value={veri.ada} onChange={e => setVeri({...veri, ada: e.target.value})} />
-              <input type="text" placeholder="PARSEL" className="p-4 bg-yellow-50 rounded-2xl font-bold outline-none border-2 border-yellow-200"
-                value={veri.parsel} onChange={e => setVeri({...veri, parsel: e.target.value})} />
+          {/* HEADER */}
+          <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+            <div>
+              <h2 className="text-2xl font-black uppercase tracking-tighter">{baslik}</h2>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">İlan Detaylarını Eksiksiz Doldurunuz</p>
             </div>
-          )}
+            <button onClick={kapat} className="p-3 bg-white text-red-500 rounded-2xl shadow-sm hover:bg-red-500 hover:text-white transition-all">
+              <X size={24} />
+            </button>
+          </div>
 
-          <textarea placeholder="İLAN AÇIKLAMASI" rows="4" className="w-full p-4 bg-gray-50 rounded-3xl font-bold outline-none border-2 border-transparent focus:border-blue-500"
-            value={veri.aciklama} onChange={e => setVeri({...veri, aciklama: e.target.value.toUpperCase()})} required />
+          <form onSubmit={kaydet} className="p-8 space-y-8">
+            
+            {/* RESİM YÜKLEME ALANI */}
+            <div className="space-y-4">
+              <label className="text-[11px] font-black text-blue-600 uppercase tracking-widest flex items-center gap-2">
+                <ImageIcon size={14} /> Çoklu Resim Ekleme
+              </label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <label className="aspect-square rounded-[30px] border-4 border-dashed border-gray-100 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all group">
+                  <input type="file" multiple className="hidden" onChange={(e) => resimYukle(e.target.files)} />
+                  {resimYukleniyor ? <Loader2 className="animate-spin text-blue-500" /> : <Plus className="text-gray-300 group-hover:text-blue-500" size={32} />}
+                  <span className="text-[9px] font-black text-gray-400 mt-2 uppercase">Görsel Seç</span>
+                </label>
+                {veri.resimler?.map((img, idx) => (
+                  <div key={idx} className="aspect-square rounded-[30px] overflow-hidden relative group">
+                    <img src={img} className="w-full h-full object-cover" />
+                    <button 
+                      type="button"
+                      onClick={() => setVeri({...veri, resimler: veri.resimler.filter((_, i) => i !== idx)})}
+                      className="absolute inset-0 bg-red-600/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
+                    >
+                      <Trash2 size={24} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
 
-          <button type="submit" className="w-full bg-[#0A192F] text-[#FFD700] py-5 rounded-3xl font-black text-lg shadow-xl hover:scale-[1.01] active:scale-95 transition-all uppercase">
-            {resimYukleniyor ? "RESİMLER YÜKLENİYOR..." : "İLANLARI KAYDET VE YAYINLA"}
-          </button>
-        </form>
+            {/* BAŞLIK VE FİYAT */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase ml-2 text-gray-400">İlan Başlığı</label>
+                <input required name="baslik" value={veri.baslik} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold transition-all uppercase placeholder:text-gray-300" placeholder="Örn: Deniz Manzaralı Lüks Daire" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase ml-2 text-gray-400">Fiyat (₺)</label>
+                <input required name="fiyat" value={veri.fiyat} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-black text-blue-600 text-xl transition-all placeholder:text-gray-300" placeholder="5.000.000" />
+              </div>
+            </div>
+
+            {/* SEÇİMLİ ALANLAR - SATIR 1 */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase ml-2 text-gray-400">Emlak Tipi</label>
+                <select name="islemTuru" value={veri.islemTuru} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
+                  <option value="">Seçiniz</option>
+                  <option value="Satılık">Satılık</option>
+                  <option value="Kiralık">Kiralık</option>
+                  <option value="Devremülk">Devremülk</option>
+                  <option value="Arsa">Arsa</option>
+                  <option value="Tarla">Tarla</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase ml-2 text-gray-400">Konut Tipi</label>
+                <select name="emlakTipi" value={veri.emlakTipi} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
+                  <option value="">Seçiniz</option>
+                  <option value="Daire">Daire</option>
+                  <option value="İşyeri">İşyeri</option>
+                  <option value="Villa">Villa</option>
+                  <option value="Müstakil">Müstakil</option>
+                  <option value="Arsa">Arsa</option>
+                  <option value="Tarla">Tarla</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase ml-2 text-gray-400">Oda Sayısı</label>
+                <select name="odaSayisi" value={veri.odaSayisi} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
+                  <option value="">Seçiniz</option>
+                  {["1+0", "1+1", "2+1", "3+1", "4+1", "5+1", "6+1", "7+1", "8+1"].map(o => <option key={o} value={o}>{o}</option>)}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase ml-2 text-gray-400">M² Alanı</label>
+                <input name="m2" value={veri.m2} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase" placeholder="Örn: 150" />
+              </div>
+            </div>
+
+            {/* SEÇİMLİ ALANLAR - SATIR 2 */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase ml-2 text-gray-400">Bulunduğu Kat</label>
+                <select name="kat" value={veri.kat} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
+                  <option value="">Seçiniz</option>
+                  {["Zemin Kat", "1", "2", "3", "4", "5", "6", "Bahçe Katı", "Villa Katı", "Bahçe Dubleksi", "Çatı Dubleksi"].map(k => <option key={k} value={k}>{k}</option>)}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase ml-2 text-gray-400">Isıtma</label>
+                <select name="isitma" value={veri.isitma} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
+                  <option value="">Seçiniz</option>
+                  <option value="Doğalgaz">Doğalgaz</option>
+                  <option value="Yerden Isıtma">Yerden Isıtma</option>
+                  <option value="Klima">Klima</option>
+                  <option value="Sobalı">Sobalı</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase ml-2 text-gray-400">Banyo Sayısı</label>
+                <select name="banyo" value={veri.banyo} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
+                  <option value="">Seçiniz</option>
+                  {[1, 2, 3, 4, 5].map(b => <option key={b} value={b}>{b}</option>)}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase ml-2 text-gray-400">Site İçerisinde</label>
+                <select name="siteIci" value={veri.siteIci} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
+                  <option value="">Seçiniz</option>
+                  <option value="Evet">Evet</option>
+                  <option value="Hayır">Hayır</option>
+                </select>
+              </div>
+            </div>
+
+            {/* LOKASYON ALANI */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-6 bg-blue-50/50 rounded-[30px] border border-blue-100">
+               <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase ml-2 text-blue-400">İl</label>
+                  <select name="il" value={veri.il} onChange={handleInputChange} className="w-full p-4 bg-white rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
+                    <option value="">Seçiniz</option>
+                    <option value="Aydın">Aydın</option>
+                    <option value="İzmir">İzmir</option>
+                  </select>
+               </div>
+               <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase ml-2 text-blue-400">İlçe</label>
+                  <select name="ilce" value={veri.ilce} onChange={handleInputChange} className="w-full p-4 bg-white rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
+                    <option value="">Seçiniz</option>
+                    {veri.il && Object.keys(lokasyonVerisi[veri.il]).map(i => <option key={i} value={i}>{i}</option>)}
+                  </select>
+               </div>
+               <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase ml-2 text-blue-400">Mahalle</label>
+                  <select name="mahalle" value={veri.mahalle} onChange={handleInputChange} className="w-full p-4 bg-white rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
+                    <option value="">Seçiniz</option>
+                    {veri.il && veri.ilce && lokasyonVerisi[veri.il][veri.ilce].map(m => <option key={m} value={m}>{m}</option>)}
+                  </select>
+               </div>
+            </div>
+
+            {/* ADA / PARSEL */}
+            <div className="grid grid-cols-2 gap-4">
+              <input name="ada" value={veri.ada} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase" placeholder="ADA NO" />
+              <input name="parsel" value={veri.parsel} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase" placeholder="PARSEL NO" />
+            </div>
+
+            {/* AÇIKLAMA */}
+            <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase ml-2 text-gray-400">İlan Açıklaması</label>
+                <textarea name="aciklama" value={veri.aciklama} onChange={handleInputChange} rows={5} className="w-full p-6 bg-gray-50 rounded-[30px] border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase transition-all resize-none placeholder:text-gray-300" placeholder="İlan hakkında detaylı bilgi giriniz..."></textarea>
+            </div>
+
+            {/* KAYDET BUTONU */}
+            <button type="submit" className="w-full bg-[#0A192F] text-[#FFD700] py-6 rounded-[30px] font-black text-sm uppercase tracking-[4px] shadow-2xl hover:bg-black hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3">
+              <Save size={20} /> İLANI YAYINLA / GÜNCELLE
+            </button>
+
+          </form>
+        </div>
       </div>
     </div>
   );
