@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { veritabani } from '../firebaseYapilandirma';
 import { collection, query, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { UserPlus, Search, Phone, MessageSquare, Trash2, UserCheck, PlusCircle, X, Briefcase, Zap, Filter } from 'lucide-react';
+import GenelForm from './GenelForm';
 
 const MusteriYonetimi = () => {
   const [musteriler, setMusteriler] = useState([]);
@@ -9,13 +10,11 @@ const MusteriYonetimi = () => {
   const [aramaMetni, setAramaMetni] = useState("");
   const [kategoriFiltre, setKategoriFiltre] = useState("Hepsi");
   const [formAcik, setFormAcik] = useState(false);
-  const [talepFormAcik, setTalepFormAcik] = useState(false);
   const [seciliMusteri, setSeciliMusteri] = useState(null);
   
-  const [yeniMusteri, setYeniMusteri] = useState({ ad: "", telefon: "", not: "" });
   const [isTalebi, setIsTalebi] = useState({
-    islemTipi: "Satılık", kategori: "Daire", fiyatMin: "", fiyatMax: "",
-    konum: "", mutfak: "Fark Etmez", manzara: "Yok", isitma: "Klima", kat: ""
+    musteriAd: "", musteriTelefon: "", islemTuru: "Satılık", emlakTipi: "Daire", 
+    fiyat: "", konum: "", aciklama: "", resimler: []
   });
 
   useEffect(() => {
@@ -32,35 +31,38 @@ const MusteriYonetimi = () => {
     return () => { unsubscribeMusteri(); unsubscribeIlan(); };
   }, []);
 
-  // OTOMATİK EŞLEŞME MANTIĞI (Matchmaking)
   const eslesenIlanlariGetir = (talep) => {
     if (!talep) return [];
     return ilanlar.filter(ilan => {
-      const katUyumu = ilan.kategori === talep.kategori;
-      const islemUyumu = ilan.islemTipi === talep.islemTipi;
-      const fiyatUyumu = (!talep.fiyatMax || Number(ilan.fiyat) <= Number(talep.fiyatMax)) &&
-                         (!talep.fiyatMin || Number(ilan.fiyat) >= Number(talep.fiyatMin));
-      // Konum kontrolü (Basit metin eşleşmesi)
-      const konumUyumu = talep.konum ? ilan.konum?.toLowerCase().includes(talep.konum.split(',')[0].trim().toLowerCase()) : true;
-      
-      return katUyumu && islemUyumu && fiyatUyumu && konumUyumu;
+      const katUyumu = ilan.emlakTipi === talep.emlakTipi;
+      const islemUyumu = ilan.islemTuru === talep.islemTuru;
+      return katUyumu && islemUyumu;
     });
   };
 
-  const musteriKaydet = async (e) => {
-    e.preventDefault();
-    await addDoc(collection(veritabani, "musteriler"), { ...yeniMusteri, durum: "Beklemede", tarih: serverTimestamp() });
-    setFormAcik(false);
-    setYeniMusteri({ ad: "", telefon: "", not: "" });
-  };
-
   const talepKaydet = async (e) => {
-    e.preventDefault();
-    const musteriRef = doc(veritabani, "musteriler", seciliMusteri.id);
-    await updateDoc(musteriRef, { talepDetay: isTalebi });
-    setTalepFormAcik(false);
+    if(e) e.preventDefault();
+    
+    if (seciliMusteri) {
+      const musteriRef = doc(veritabani, "musteriler", seciliMusteri.id);
+      await updateDoc(musteriRef, { 
+        ad: isTalebi.musteriAd,
+        telefon: isTalebi.musteriTelefon,
+        talepDetay: isTalebi 
+      });
+    } else {
+      await addDoc(collection(veritabani, "musteriler"), { 
+        ad: isTalebi.musteriAd, 
+        telefon: isTalebi.musteriTelefon, 
+        not: isTalebi.aciklama,
+        talepDetay: isTalebi,
+        tarih: serverTimestamp() 
+      });
+    }
+    
+    setFormAcik(false);
     setSeciliMusteri(null);
-    setIsTalebi({ islemTipi: "Satılık", kategori: "Daire", fiyatMin: "", fiyatMax: "", konum: "", mutfak: "Fark Etmez", manzara: "Yok", isitma: "Klima", kat: "" });
+    setIsTalebi({ musteriAd: "", musteriTelefon: "", islemTuru: "Satılık", emlakTipi: "Daire", fiyat: "", konum: "", aciklama: "", resimler: [] });
   };
 
   const musteriSil = async (id) => {
@@ -76,11 +78,10 @@ const MusteriYonetimi = () => {
 
   return (
     <div className="space-y-6 p-4">
-      {/* Üst Panel & Filtreleme (Talep Analizi & Filtreleme) */}
       <div className="bg-white p-6 rounded-[2.5rem] shadow-sm space-y-4">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <h2 className="text-2xl font-black text-[#0A192F]">MÜŞTERİ PORTFÖYÜ</h2>
-          <button onClick={() => setFormAcik(true)} className="bg-[#0A192F] text-[#FFD700] px-8 py-4 rounded-2xl font-black flex items-center gap-2 hover:scale-105 transition-all shadow-lg">
+          <button onClick={() => { setSeciliMusteri(null); setFormAcik(true); }} className="bg-[#0A192F] text-[#FFD700] px-8 py-4 rounded-2xl font-black flex items-center gap-2 hover:scale-105 transition-all shadow-lg">
             <UserPlus size={20} /> YENİ MÜŞTERİ
           </button>
         </div>
@@ -95,28 +96,16 @@ const MusteriYonetimi = () => {
               onChange={(e) => setAramaMetni(e.target.value.toLowerCase())}
             />
           </div>
-          <select 
-            className="p-3.5 bg-gray-50 rounded-2xl font-bold border-none outline-none focus:ring-2 focus:ring-[#FFD700]"
-            onChange={(e) => setKategoriFiltre(e.target.value)}
-          >
-            <option value="Hepsi">Tüm Kategoriler</option>
-            <option value="Daire">Daire Arayanlar</option>
-            <option value="Villa">Villa Arayanlar</option>
-            <option value="Arsa">Arsa Arayanlar</option>
-          </select>
         </div>
       </div>
 
-      {/* Müşteri Kartları */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {musteriler
           .filter(m => m.ad?.toLowerCase().includes(aramaMetni) || m.telefon?.includes(aramaMetni))
-          .filter(m => kategoriFiltre === "Hepsi" || m.talepDetay?.kategori === kategoriFiltre)
           .map((m) => {
             const eslesmeler = eslesenIlanlariGetir(m.talepDetay);
             return (
               <div key={m.id} className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100 relative group overflow-hidden">
-                {/* Matchmaking Rozeti */}
                 {eslesmeler.length > 0 && (
                   <div className="absolute top-0 left-0 bg-[#FFD700] text-[#0A192F] px-4 py-2 rounded-br-2xl font-black text-[10px] flex items-center gap-1 animate-pulse">
                     <Zap size={12} fill="currentColor"/> {eslesmeler.length} UYGUN İLAN
@@ -137,15 +126,12 @@ const MusteriYonetimi = () => {
                    <Phone size={16} className="text-[#FFD700]"/> 0{m.telefon}
                 </div>
 
-                {/* Talep Özeti (Müşteri Sadakati İçin) */}
                 <div className="bg-gray-50 p-5 rounded-3xl mb-6 border border-gray-100">
-                  <p className="text-xs text-gray-400 font-bold uppercase mb-2">Müşteri Notu & Talep</p>
-                  <p className="text-sm text-gray-600 font-medium italic mb-3">"{m.not}"</p>
-                  
+                  <p className="text-xs text-gray-400 font-bold uppercase mb-2">Talep Özeti</p>
                   {m.talepDetay ? (
-                    <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-200">
-                      <span className="bg-[#0A192F] text-[#FFD700] text-[9px] px-2 py-1 rounded-lg font-black uppercase">{m.talepDetay.islemTipi}</span>
-                      <span className="bg-blue-50 text-blue-700 text-[9px] px-2 py-1 rounded-lg font-black uppercase">{m.talepDetay.kategori}</span>
+                    <div className="flex flex-wrap gap-2 pt-3">
+                      <span className="bg-[#0A192F] text-[#FFD700] text-[9px] px-2 py-1 rounded-lg font-black uppercase">{m.talepDetay.islemTuru}</span>
+                      <span className="bg-blue-50 text-blue-700 text-[9px] px-2 py-1 rounded-lg font-black uppercase">{m.talepDetay.emlakTipi}</span>
                       <span className="bg-green-50 text-green-700 text-[9px] px-2 py-1 rounded-lg font-black uppercase">{m.talepDetay.konum}</span>
                     </div>
                   ) : (
@@ -155,7 +141,11 @@ const MusteriYonetimi = () => {
 
                 <div className="flex flex-col gap-2">
                   <button 
-                    onClick={() => { setSeciliMusteri(m); setTalepFormAcik(true); }}
+                    onClick={() => { 
+                      setSeciliMusteri(m); 
+                      setIsTalebi(m.talepDetay || { musteriAd: m.ad, musteriTelefon: m.telefon, islemTuru: "Satılık", emlakTipi: "Daire" }); 
+                      setFormAcik(true); 
+                    }}
                     className="w-full bg-[#FFD700] text-[#0A192F] py-4 rounded-2xl font-black text-xs flex items-center justify-center gap-2 hover:bg-[#0A192F] hover:text-[#FFD700] transition-all"
                   >
                     <Briefcase size={16}/> {m.talepDetay ? "TALEBİ GÜNCELLE" : "İŞ / TALEP EKLE"}
@@ -169,51 +159,17 @@ const MusteriYonetimi = () => {
           })}
       </div>
 
-      {/* MODALLAR (Öncekiyle Aynı, Form Yapıları Korundu) */}
-      {/* ... (Hızlı Müşteri ve Detaylı Talep Modalları yukarıdaki kodla aynı şekilde devam ediyor) ... */}
       {formAcik && (
-        <div className="fixed inset-0 bg-[#0A192F]/90 backdrop-blur-md flex items-center justify-center z-[110] p-4">
-          <div className="bg-white rounded-[2.5rem] p-10 w-full max-w-md shadow-2xl">
-            <h3 className="text-3xl font-black mb-8 text-[#0A192F]">YENİ MÜŞTERİ</h3>
-            <form onSubmit={musteriKaydet} className="space-y-5">
-              <input required placeholder="Ad Soyad" className="w-full p-5 bg-gray-50 border-none rounded-2xl font-bold" onChange={e => setYeniMusteri({...yeniMusteri, ad: e.target.value})} />
-              <input required placeholder="Telefon" className="w-full p-5 bg-gray-50 border-none rounded-2xl font-bold" onChange={e => setYeniMusteri({...yeniMusteri, telefon: e.target.value})} />
-              <textarea placeholder="Kısa Not..." className="w-full p-5 bg-gray-50 border-none rounded-2xl h-32 font-bold" onChange={e => setYeniMusteri({...yeniMusteri, not: e.target.value})} />
-              <button type="submit" className="w-full bg-[#0A192F] text-[#FFD700] py-5 rounded-2xl font-black text-lg">KAYDET</button>
-              <button type="button" onClick={() => setFormAcik(false)} className="w-full text-gray-400 font-bold py-2">Vazgeç</button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {talepFormAcik && (
-        <div className="fixed inset-0 bg-[#0A192F]/90 backdrop-blur-md flex items-center justify-center z-[120] p-4">
-          <div className="bg-white rounded-[2.5rem] p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl relative">
-            <button className="absolute top-6 right-6 text-gray-400" onClick={() => setTalepFormAcik(false)}><X size={30}/></button>
-            <h3 className="text-2xl font-black mb-8 text-[#0A192F] uppercase">{seciliMusteri?.ad} <br/><span className="text-[#FFD700]">TALEP DETAYLARI</span></h3>
-            <form onSubmit={talepKaydet} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                    <label className="text-xs font-black text-gray-400 uppercase">İşlem & Kategori</label>
-                    <select className="w-full p-4 bg-gray-50 rounded-2xl font-bold border-none" onChange={e => setIsTalebi({...isTalebi, islemTipi: e.target.value})}>
-                        <option>Satılık</option><option>Kiralık</option>
-                    </select>
-                    <select className="w-full p-4 bg-gray-50 rounded-2xl font-bold border-none" onChange={e => setIsTalebi({...isTalebi, kategori: e.target.value})}>
-                        <option>Daire</option><option>Villa</option><option>Yazlık</option><option>Arsa</option><option>Tarla</option>
-                    </select>
-                </div>
-                <div className="space-y-4">
-                    <label className="text-xs font-black text-gray-400 uppercase">Bütçe (TL)</label>
-                    <input type="number" placeholder="Min Fiyat" className="w-full p-4 bg-gray-50 rounded-2xl font-bold border-none" onChange={e => setIsTalebi({...isTalebi, fiyatMin: e.target.value})} />
-                    <input type="number" placeholder="Max Fiyat" className="w-full p-4 bg-gray-50 rounded-2xl font-bold border-none" onChange={e => setIsTalebi({...isTalebi, fiyatMax: e.target.value})} />
-                </div>
-                <div className="md:col-span-2 space-y-4">
-                    <label className="text-xs font-black text-gray-400 uppercase">Konum</label>
-                    <input placeholder="Örn: Kuşadası, Kadınlar Denizi..." className="w-full p-4 bg-gray-50 rounded-2xl font-bold border-none" onChange={e => setIsTalebi({...isTalebi, konum: e.target.value})} />
-                </div>
-                <button type="submit" className="md:col-span-2 bg-[#0A192F] text-[#FFD700] py-5 rounded-2xl font-black text-xl shadow-xl">ANALİZİ BAŞLAT VE KAYDET</button>
-            </form>
-          </div>
-        </div>
+        <GenelForm 
+          tip="talep"
+          baslik={seciliMusteri ? "TALEBİ GÜNCELLE" : "YENİ MÜŞTERİ TALEBİ"}
+          veri={isTalebi}
+          setVeri={setIsTalebi}
+          kapat={() => { setFormAcik(false); setSeciliMusteri(null); }}
+          kaydet={talepKaydet}
+          resimYukle={() => {}}
+          resimYukleniyor={false}
+        />
       )}
     </div>
   );
