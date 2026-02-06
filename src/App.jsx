@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-// Tüm yolları küçük harf yaparak çakışmayı önlüyoruz
 import Giris from './sayfalar/Giris'; 
 import Navigasyon from './bilesenler/Navigasyon';
 
