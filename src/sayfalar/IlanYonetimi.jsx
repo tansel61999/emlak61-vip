@@ -1,117 +1,163 @@
 import React, { useState, useEffect } from 'react';
 import { veritabani, depolama } from '../firebaseYapilandirma';
-import { getAuth, onAuthStateChanged, signOut, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { collection, query, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, orderBy, getDocs, where } from 'firebase/firestore';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { collection, query, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, orderBy } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { X, Search, Loader2, Edit3, Trash2, MapPin, UserPlus, ShieldCheck, LogOut, Plus, CheckCircle2 } from 'lucide-react';
-import GenelForm from '../bilesenler/GenelForm';
+import { X, Save, Search, Image as ImageIcon, Loader2, Edit3, Trash2, MapPin, Building2, Wind, Compass, Calendar, CreditCard, Layers, Hash, User, Send, Clock, Settings, UserPlus, ShieldCheck } from 'lucide-react';
 
 const IlanYonetimi = () => {
   const [ilanlar, setIlanlar] = useState([]);
+  const [danismanlar, setDanismanlar] = useState([]);
+  const [yeniDanismanIsmi, setYeniDanismanIsmi] = useState("");
   const [aramaTerimi, setAramaTerimi] = useState("");
   const [formAcik, setFormAcik] = useState(false);
+  const [danismanPanelAcik, setDanismanPanelAcik] = useState(false);
   const [detayIlan, setDetayIlan] = useState(null);
   const [duzenlenenId, setDuzenlenenId] = useState(null);
-  const [kullaniciBilgi, setKullaniciBilgi] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [authHazir, setAuthHazir] = useState(false);
+  const [yukleniyor, setYukleniyor] = useState(true);
   const [resimYukleniyor, setResimYukleniyor] = useState(false);
+  const [aktifResimIdx, setAktifResimIdx] = useState(0);
+  const [aktarimModali, setAktarimModali] = useState({ acik: false, ilanId: null, mevcutDanisman: "" });
   
-  const auth = getAuth();
+  // YÖNETİCİ KONTROLÜ İÇİN STATE
+  const [mevcutKullaniciEposta, setMevcutKullaniciEposta] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
   const YONETICI_EPOSTA = "tansel6199@gmail.com";
 
-  const bosForm = {
-    islemTuru: "", baslik: "", fiyat: "", il: "Aydın", ilce: "", mahalle: "",
-    emlakTipi: "", konutTipi: "", odaSayisi: "", kat: "", durum: "SATILIK", isitma: "", 
-    banyo: "1", siteIci: "Hayır", m2: "", aciklama: "", resimler: [], ada: "", parsel: "",
-    ekleyen: "", ekleyenAd: "", ekleyenFoto: ""
-  };
-
-  const [yeniIlan, setYeniIlan] = useState(bosForm);
+  const auth = getAuth();
 
   useEffect(() => {
+    // Kullanıcı oturum durumunu izle
     const unsubAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
-        setIsAdmin(user.email.toLowerCase() === YONETICI_EPOSTA.toLowerCase());
-        setKullaniciBilgi(user);
+        const eposta = user.email.toLowerCase();
+        setMevcutKullaniciEposta(eposta);
+        setIsAdmin(eposta === YONETICI_EPOSTA.toLowerCase());
       }
-      setAuthHazir(true);
     });
 
-    const q = query(collection(veritabani, "ilanlar"), orderBy("tarih", "desc"));
-    const unsubSnap = onSnapshot(q, (snap) => {
+    const qIlanlar = query(collection(veritabani, "ilanlar"), orderBy("tarih", "desc"));
+    const unsubIlanlar = onSnapshot(qIlanlar, (snap) => {
       setIlanlar(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      setYukleniyor(false);
     });
 
-    return () => { unsubAuth(); unsubSnap(); };
+    const qDanismanlar = query(collection(veritabani, "danismanlar"), orderBy("isim", "asc"));
+    const unsubDanismanlar = onSnapshot(qDanismanlar, (snap) => {
+      setDanismanlar(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+
+    return () => { unsubAuth(); unsubIlanlar(); unsubDanismanlar(); };
   }, []);
 
-  const durumuDegistir = async (id, mevcutDurum) => {
-    const yeniDurum = mevcutDurum === "SATILDI" ? "SATILIK" : "SATILDI";
-    await updateDoc(doc(veritabani, "ilanlar", id), { durum: yeniDurum });
+  const danismanEkle = async () => {
+    if (!isAdmin || !yeniDanismanIsmi.trim()) return;
+    try {
+      await addDoc(collection(veritabani, "danismanlar"), { isim: yeniDanismanIsmi.toLowerCase().trim() });
+      setYeniDanismanIsmi("");
+    } catch (h) { alert("Yetki hatası veya bağlantı sorunu."); }
   };
 
-  const resimleriYukle = async (files) => {
+  const danismanSil = async (id) => {
+    if (!isAdmin) return;
+    if (window.confirm("Bu danışmanı silmek istediğinize emin misiniz?")) {
+      await deleteDoc(doc(veritabani, "danismanlar", id));
+    }
+  };
+
+  const resimleriYukle = async (dosyalar) => {
     setResimYukleniyor(true);
-    const yuklenenler = await Promise.all(Array.from(files).map(async (file) => {
-      const sRef = ref(depolama, `ilanlar/${Date.now()}_${file.name}`);
-      const snap = await uploadBytes(sRef, file);
-      return await getDownloadURL(snap.ref);
-    }));
-    setYeniIlan(prev => ({ ...prev, resimler: [...(prev.resimler || []), ...yuklenenler] }));
+    const yuklenenURLler = [];
+    try {
+      for (let i = 0; i < dosyalar.length; i++) {
+        const depoRef = ref(depolama, `ilanlar/${Date.now()}-${dosyalar[i].name}`);
+        const sonuc = await uploadBytes(depoRef, dosyalar[i]);
+        const url = await getDownloadURL(sonuc.ref);
+        yuklenenURLler.push(url);
+      }
+      setYeniIlan(prev => ({ ...prev, resimler: [...(prev.resimler || []), ...yuklenenURLler] }));
+    } catch (h) { alert("Resim yükleme hatası!"); }
     setResimYukleniyor(false);
+  };
+
+  const formatPara = (d) => {
+    if (!d) return "0";
+    const deger = d.toString().replace(/\D/g, "");
+    return new Intl.NumberFormat('tr-TR').format(deger);
   };
 
   const ilanKaydet = async (e) => {
     e.preventDefault();
-    const veri = { ...yeniIlan, fiyat: yeniIlan.fiyat.toString().replace(/\D/g, ""), ekleyen: kullaniciBilgi.email, ekleyenAd: kullaniciBilgi.displayName };
-    if (duzenlenenId) await updateDoc(doc(veritabani, "ilanlar", duzenlenenId), { ...veri, guncellemeTarihi: serverTimestamp() });
-    else await addDoc(collection(veritabani, "ilanlar"), { ...veri, tarih: serverTimestamp(), durum: "SATILIK" });
-    setFormAcik(false); setDuzenlenenId(null); setYeniIlan(bosForm);
+    try {
+      const kaydedilecekVeri = {
+        ...yeniIlan,
+        fiyat: yeniIlan.fiyat.toString().replace(/\D/g, ""),
+        ekleyen: isAdmin ? (yeniIlan.ekleyen || "ADMİN") : mevcutKullaniciEposta
+      };
+
+      if (duzenlenenId) {
+        await updateDoc(doc(veritabani, "ilanlar", duzenlenenId), { ...kaydedilecekVeri, guncellemeTarihi: serverTimestamp() });
+      } else {
+        await addDoc(collection(veritabani, "ilanlar"), { ...kaydedilecekVeri, tarih: serverTimestamp() });
+      }
+      formuKapat();
+    } catch (h) { alert("Kaydetme hatası!"); }
   };
 
-  const filtrelenmis = ilanlar.filter(i => (i.baslik || "").toLowerCase().includes(aramaTerimi.toLowerCase()));
+  const ilanAktar = async (yeniDanisman) => {
+    if (!isAdmin) return;
+    try {
+      await updateDoc(doc(veritabani, "ilanlar", aktarimModali.ilanId), { ekleyen: yeniDanisman });
+      setAktarimModali({ acik: false, ilanId: null, mevcutDanisman: "" });
+    } catch (h) { alert("Aktarım hatası!"); }
+  };
 
-  if (!authHazir) return null;
+  const ilanSil = async (id) => {
+    if (!isAdmin) {
+      alert("İlan silme yetkisi sadece yöneticidedir.");
+      return;
+    }
+    if (window.confirm("Bu ilanı silmek üzeresiniz?")) {
+      await deleteDoc(doc(veritabani, "ilanlar", id));
+      setDetayIlan(null);
+    }
+  };
+
+  const formuKapat = () => {
+    setFormAcik(false);
+    setDuzenlenenId(null);
+    setYeniIlan(bosForm);
+  };
+
+  const tarihFormatla = (ts) => {
+    if (!ts) return "";
+    const d = ts.toDate();
+    return d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
+
+  const bosForm = {
+    islemTuru: "", baslik: "", fiyat: "", il: "Aydın", ilce: "", mahalle: "",
+    emlakTipi: "", oda: "", kat: "", durum: "AKTİF", isinma: "", binaYasi: "",
+    cephe: "", kredi: "", aciklama: "", resimler: [], ada: "", parsel: "", ekleyen: ""
+  };
+
+  const [yeniIlan, setYeniIlan] = useState(bosForm);
+
+  const konumVerisi = {
+    "Aydın": { "Kuşadası": ["Alacamescit", "Bayraklıdede", "Caferli", "Camiatik", "Camikebir", "Cumhuriyet", "Davutlar", "Güzelçamlı", "Hacıfeyzullah", "İkiçeşmelik", "Kadınlar Denizi", "Türkmen", "Yavansu"], "Söke": ["Atburgazı", "Bağarası", "Güllübahçe", "Yenidoğan", "Savuca"], "Didim": ["Altınkum", "Efeler", "Hisar", "Mavişehir"] },
+    "İzmir": { "Selçuk": ["Atatürk", "Cumhuriyet", "İsabey"], "Menderes": ["Özdere", "Gümüldür"] }
+  };
 
   return (
-    <div className="min-h-screen bg-[#E6EAEF] p-4">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="bg-white p-8 rounded-[40px] shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
-          <h1 className="text-3xl font-black italic">EMLAK61</h1>
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={20} />
-            <input type="text" placeholder="İlanlarda ara..." className="w-full pl-12 pr-4 py-4 bg-gray-50 rounded-2xl outline-none font-bold" onChange={(e) => setAramaTerimi(e.target.value)} />
-          </div>
-          <button onClick={() => { setDuzenlenenId(null); setYeniIlan(bosForm); setFormAcik(true); }} className="bg-[#0A192F] text-[#FFD700] px-8 py-4 rounded-2xl font-black">+ YENİ İLAN</button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtrelenmis.map((i) => (
-            <div key={i.id} onClick={() => setDetayIlan(i)} className="bg-white rounded-[40px] overflow-hidden shadow-sm hover:shadow-xl transition-all cursor-pointer group relative border border-gray-100">
-              <div className="h-64 relative">
-                {i.resimler?.[0] ? <img src={i.resimler[0]} className="w-full h-full object-cover" /> : <div className="h-full bg-gray-100 flex items-center justify-center font-black">RESİM YOK</div>}
-                <div className="absolute top-4 left-4">
-                  <span className={`px-4 py-1.5 rounded-full font-black text-[9px] uppercase ${i.durum === "SATILDI" ? "bg-red-600 text-white" : "bg-green-600 text-white"}`}>
-                    {i.durum === "SATILDI" ? "SATILDI" : "SATILIK"}
-                  </span>
-                </div>
-                <button onClick={(e) => { e.stopPropagation(); durumuDegistir(i.id, i.durum); }} className="absolute top-4 right-4 p-2 bg-white rounded-xl text-red-600 opacity-0 group-hover:opacity-100 transition-all shadow-xl">
-                  <CheckCircle2 size={20}/>
-                </button>
-              </div>
-              <div className="p-6">
-                <div className="text-2xl font-black mb-1">{new Intl.NumberFormat('tr-TR').format(i.fiyat)} ₺</div>
-                <h3 className="font-bold text-gray-500 uppercase text-[10px] line-clamp-1">{i.baslik}</h3>
-              </div>
+    <div className="p-4 space-y-6 max-w-7xl mx-auto font-sans">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-6 rounded-[32px] shadow-sm border">
+        <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+                <h2 className="text-2xl font-black text-[#0A192F]">EMLAK61</h2>
+                {isAdmin ? (
+                  <span className="bg-red-600 text-white text-[10px] px-2 py-1 rounded-md font-black">YÖNETİCİ AKTİF</span>
+                ) : (
+                  <span className="bg-gray-100 text-gray-400 text-[10px] px-2 py-1 rounded-md font-black">DANIŞMAN MODU</span>
+                )}
             </div>
-          ))}
-        </div>
-      </div>
-
-      {formAcik && <GenelForm tip="ilan" baslik={duzenlenenId ? "GÜNCELLE" : "YENİ"} veri={yeniIlan} setVeri={setYeniIlan} kapat={() => setFormAcik(false)} kaydet={ilanKaydet} resimYukle={resimleriYukle} resimYukleniyor={resimYukleniyor} />}
-    </div>
-  );
-};
-
-export default IlanYonetimi;
+            <span className="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded mt-1 font-bold">{mevcutK
