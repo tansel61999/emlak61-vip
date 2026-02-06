@@ -97,17 +97,21 @@ const IlanYonetimi = () => {
   const resimleriYukle = async (files) => {
     if (!files || files.length === 0) return;
     setResimYukleniyor(true);
-    const yuklenenURLler = [];
     try {
-      for (const file of files) {
+      const yuklemeIslemleri = Array.from(files).map(async (file) => {
         const storageRef = ref(depolama, `ilanlar/${Date.now()}_${file.name}`);
         await uploadBytes(storageRef, file);
-        const url = await getDownloadURL(storageRef);
-        yuklenenURLler.push(url);
-      }
-      setYeniIlan(prev => ({ ...prev, resimler: [...(prev.resimler || []), ...yuklenenURLler] }));
+        return await getDownloadURL(storageRef);
+      });
+      
+      const yuklenenURLler = await Promise.all(yuklemeIslemleri);
+      setYeniIlan(prev => ({ 
+        ...prev, 
+        resimler: [...(prev.resimler || []), ...yuklenenURLler] 
+      }));
     } catch (error) {
       alert("Resim yükleme hatası!");
+      console.error(error);
     } finally {
       setResimYukleniyor(false);
     }
@@ -346,37 +350,45 @@ const IlanYonetimi = () => {
                     <h1 className="text-xl font-black uppercase mb-10 leading-tight">{detayIlan.baslik}</h1>
 
                     <div className="grid grid-cols-2 gap-4 mb-10">
-                        {/* Ortak Alanlar */}
-                        {[
-                          { l: "ODA", v: detayIlan.odaSayisi },
-                          { l: "M²", v: detayIlan.m2 },
-                          { l: "KAT", v: detayIlan.kat },
-                          { l: "ISITMA", v: detayIlan.isitma },
-                          { l: "KONUM", v: detayIlan.ilce }
-                        ].map((item, idx) => (
-                          <div key={idx} className="bg-gray-50 p-5 rounded-[25px] border border-gray-100">
-                            <div className="text-[9px] font-black text-gray-400 mb-1 uppercase">{item.l}</div>
-                            <div className="text-xs font-black uppercase">{item.v || '-'}</div>
-                          </div>
-                        ))}
-
-                        {/* ARSA/TARLA İSE ADA-PARSEL, DEĞİLSE MUTFAK */}
+                        {/* ARSA/TARLA İSE SADECE ADA-PARSEL VE M2 GÖSTER */}
                         {detayIlan.emlakTipi === "Arsa" || detayIlan.emlakTipi === "Tarla" ? (
-                          <div className="bg-blue-50 p-5 rounded-[25px] border border-blue-100 col-span-2 flex gap-4">
-                            <div className="flex-1">
-                              <div className="text-[9px] font-black text-blue-400 mb-1 uppercase">ADA</div>
-                              <div className="text-xs font-black uppercase">{detayIlan.ada || '-'}</div>
+                          <>
+                            <div className="bg-blue-50 p-5 rounded-[25px] border border-blue-100 col-span-2 flex gap-4">
+                              <div className="flex-1">
+                                <div className="text-[9px] font-black text-blue-400 mb-1 uppercase">ADA</div>
+                                <div className="text-xs font-black uppercase">{detayIlan.ada || '-'}</div>
+                              </div>
+                              <div className="flex-1">
+                                <div className="text-[9px] font-black text-blue-400 mb-1 uppercase">PARSEL</div>
+                                <div className="text-xs font-black uppercase">{detayIlan.parsel || '-'}</div>
+                              </div>
                             </div>
-                            <div className="flex-1">
-                              <div className="text-[9px] font-black text-blue-400 mb-1 uppercase">PARSEL</div>
-                              <div className="text-xs font-black uppercase">{detayIlan.parsel || '-'}</div>
+                            <div className="bg-gray-50 p-5 rounded-[25px] border border-gray-100">
+                                <div className="text-[9px] font-black text-gray-400 mb-1 uppercase">M²</div>
+                                <div className="text-xs font-black uppercase">{detayIlan.m2 || '-'}</div>
                             </div>
-                          </div>
+                            <div className="bg-gray-50 p-5 rounded-[25px] border border-gray-100">
+                                <div className="text-[9px] font-black text-gray-400 mb-1 uppercase">KONUM</div>
+                                <div className="text-xs font-black uppercase">{detayIlan.ilce || '-'}</div>
+                            </div>
+                          </>
                         ) : (
-                          <div className="bg-gray-50 p-5 rounded-[25px] border border-gray-100">
-                            <div className="text-[9px] font-black text-gray-400 mb-1 uppercase">MUTFAK</div>
-                            <div className="text-xs font-black uppercase">{detayIlan.mutfak || '-'}</div>
-                          </div>
+                          /* DİĞER EMLAK TİPLERİ İÇİN STANDART ALANLAR */
+                          <>
+                            {[
+                              { l: "ODA", v: detayIlan.odaSayisi },
+                              { l: "M²", v: detayIlan.m2 },
+                              { l: "KAT", v: detayIlan.kat },
+                              { l: "ISITMA", v: detayIlan.isitma },
+                              { l: "KONUM", v: detayIlan.ilce },
+                              { l: "MUTFAK", v: detayIlan.mutfak }
+                            ].map((item, idx) => (
+                              <div key={idx} className="bg-gray-50 p-5 rounded-[25px] border border-gray-100">
+                                <div className="text-[9px] font-black text-gray-400 mb-1 uppercase">{item.l}</div>
+                                <div className="text-xs font-black uppercase">{item.v || '-'}</div>
+                              </div>
+                            ))}
+                          </>
                         )}
                     </div>
 
