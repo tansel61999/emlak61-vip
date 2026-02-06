@@ -292,7 +292,7 @@ const IlanYonetimi = () => {
         </div>
       </div>
 
-      {/* DETAY MODAL (YENİ MODERN TASARIM) */}
+      {/* DETAY MODAL */}
       {detayIlan && (
         <div className="fixed inset-0 bg-[#0A192F]/98 z-[1000] overflow-y-auto" onClick={() => setDetayIlan(null)}>
             <div className="min-h-screen flex items-center justify-center p-4 md:p-10">
@@ -327,8 +327,18 @@ const IlanYonetimi = () => {
                       
                       {(isAdmin || detayIlan.ekleyen === kullaniciBilgi?.eposta) && (
                         <div className="flex gap-2">
-                          <button onClick={() => { setDuzenlenenId(detayIlan.id); setYeniIlan(detayIlan); setFormAcik(true); setDetayIlan(null); }} className="p-4 bg-gray-50 text-blue-600 rounded-3xl hover:bg-blue-600 hover:text-white transition-all"><Edit3 size={20}/></button>
-                          <button onClick={() => ilanSil(detayIlan.id)} className="p-4 bg-gray-50 text-red-600 rounded-3xl hover:bg-red-600 hover:text-white transition-all"><Trash2 size={20}/></button>
+                          <button 
+                            onClick={() => { 
+                                setDuzenlenenId(detayIlan.id); 
+                                setYeniIlan(detayIlan); 
+                                setFormAcik(true); 
+                                setDetayIlan(null); 
+                            }} 
+                            className="p-4 bg-gray-50 text-blue-600 rounded-3xl hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                          >
+                            <Edit3 size={20}/>
+                          </button>
+                          <button onClick={() => ilanSil(detayIlan.id)} className="p-4 bg-gray-50 text-red-600 rounded-3xl hover:bg-red-600 hover:text-white transition-all shadow-sm"><Trash2 size={20}/></button>
                         </div>
                       )}
                     </div>
