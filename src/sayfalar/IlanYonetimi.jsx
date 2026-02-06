@@ -351,7 +351,7 @@ const IlanYonetimi = () => {
                          { l: "M²", v: detayIlan.m2 },
                          { l: "KAT", v: detayIlan.kat },
                          { l: "ISITMA", v: detayIlan.isitma },
-                         { l: "ADA/PARSEL", v: `${detayIlan.ada || '-'}/${detayIlan.parsel || '-'}` },
+                         { l: "MUTFAK", v: `${detayIlan.mutfak },
                          { l: "KONUM", v: detayIlan.ilce }
                        ].map((item, idx) => (
                          <div key={idx} className="bg-gray-50 p-5 rounded-[25px] border border-gray-100">
