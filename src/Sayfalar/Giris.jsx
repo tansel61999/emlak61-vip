@@ -1,11 +1,12 @@
 import React from 'react';
+// Dosya yolunun ve isminin tam eşleştiğinden emin oluyoruz
 import { yetki } from '../firebaseYapilandirma';
 import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 
 const Giris = () => {
   const googleIleGiris = async () => {
     try {
-      // Önceki oturumu temizleyerek hesap seçme ekranını zorlar
+      // Oturumu temizle
       await signOut(yetki);
       
       const provider = new GoogleAuthProvider();
@@ -24,9 +25,9 @@ const Giris = () => {
 
   return (
     <div className="min-h-screen bg-[#0A192F] flex flex-col items-center justify-center p-4">
-      {/* VERCEL DURUM KONTROLÜ */}
+      {/* VERCEL CANLI TEST LOGOSU */}
       <div className="mb-6 bg-red-600 text-white px-8 py-3 rounded-full font-black animate-bounce shadow-2xl border-4 border-white">
-        SİSTEM AKTİF: VERCEL TEST ✅
+        EMLAK61 VIP: VERCEL AKTİF ✅
       </div>
 
       <div className="bg-white p-10 rounded-[40px] shadow-2xl w-full max-w-md text-center border-[8px] border-white/10">
