@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { X, Image as ImageIcon, Loader2, Save, Trash2 } from 'lucide-react';
+import React from 'react';
+import { X, Image as ImageIcon, Loader2, Save, Trash2, Plus } from 'lucide-react';
 
 const GenelForm = ({ tip, baslik, veri, setVeri, kapat, kaydet, resimYukle, resimYukleniyor }) => {
-  // Lokasyon Verileri
   const lokasyonVerisi = {
     "Aydın": {
       "Kuşadası": ["Kadınlar Denizi", "Soğucak", "Ege", "İkiçeşmelik", "Yavansu", "Güzelçamlı", "Davutlar"],
@@ -36,7 +35,9 @@ const GenelForm = ({ tip, baslik, veri, setVeri, kapat, kaydet, resimYukle, resi
           <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
             <div>
               <h2 className="text-2xl font-black uppercase tracking-tighter">{baslik}</h2>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">İlan Detaylarını Eksiksiz Doldurunuz</p>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                {veri.id ? "MEVCUT İLANI GÜNCELLE" : "İLAN DETAYLARINI EKSİKSİZ DOLDURUNUZ"}
+              </p>
             </div>
             <button onClick={kapat} className="p-3 bg-white text-red-500 rounded-2xl shadow-sm hover:bg-red-500 hover:text-white transition-all">
               <X size={24} />
@@ -58,7 +59,7 @@ const GenelForm = ({ tip, baslik, veri, setVeri, kapat, kaydet, resimYukle, resi
                 </label>
                 {veri.resimler?.map((img, idx) => (
                   <div key={idx} className="aspect-square rounded-[30px] overflow-hidden relative group">
-                    <img src={img} className="w-full h-full object-cover" />
+                    <img src={img} className="w-full h-full object-cover" alt="" />
                     <button 
                       type="button"
                       onClick={() => setVeri({...veri, resimler: veri.resimler.filter((_, i) => i !== idx)})}
@@ -75,11 +76,11 @@ const GenelForm = ({ tip, baslik, veri, setVeri, kapat, kaydet, resimYukle, resi
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase ml-2 text-gray-400">İlan Başlığı</label>
-                <input required name="baslik" value={veri.baslik} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold transition-all uppercase placeholder:text-gray-300" placeholder="Örn: Deniz Manzaralı Lüks Daire" />
+                <input required name="baslik" value={veri.baslik || ""} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold transition-all uppercase placeholder:text-gray-300" placeholder="Örn: Deniz Manzaralı Lüks Daire" />
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase ml-2 text-gray-400">Fiyat (₺)</label>
-                <input required name="fiyat" value={veri.fiyat} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-black text-blue-600 text-xl transition-all placeholder:text-gray-300" placeholder="5.000.000" />
+                <input required name="fiyat" value={veri.fiyat || ""} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-black text-blue-600 text-xl transition-all placeholder:text-gray-300" placeholder="5.000.000" />
               </div>
             </div>
 
@@ -87,7 +88,7 @@ const GenelForm = ({ tip, baslik, veri, setVeri, kapat, kaydet, resimYukle, resi
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase ml-2 text-gray-400">Emlak Tipi</label>
-                <select name="islemTuru" value={veri.islemTuru} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
+                <select name="islemTuru" value={veri.islemTuru || ""} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
                   <option value="">Seçiniz</option>
                   <option value="Satılık">Satılık</option>
                   <option value="Kiralık">Kiralık</option>
@@ -98,7 +99,7 @@ const GenelForm = ({ tip, baslik, veri, setVeri, kapat, kaydet, resimYukle, resi
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase ml-2 text-gray-400">Konut Tipi</label>
-                <select name="emlakTipi" value={veri.emlakTipi} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
+                <select name="emlakTipi" value={veri.emlakTipi || ""} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
                   <option value="">Seçiniz</option>
                   <option value="Daire">Daire</option>
                   <option value="İşyeri">İşyeri</option>
@@ -110,14 +111,14 @@ const GenelForm = ({ tip, baslik, veri, setVeri, kapat, kaydet, resimYukle, resi
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase ml-2 text-gray-400">Oda Sayısı</label>
-                <select name="odaSayisi" value={veri.odaSayisi} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
+                <select name="odaSayisi" value={veri.odaSayisi || ""} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
                   <option value="">Seçiniz</option>
                   {["1+0", "1+1", "2+1", "3+1", "4+1", "5+1", "6+1", "7+1", "8+1"].map(o => <option key={o} value={o}>{o}</option>)}
                 </select>
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase ml-2 text-gray-400">M² Alanı</label>
-                <input name="m2" value={veri.m2} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase" placeholder="Örn: 150" />
+                <input name="m2" value={veri.m2 || ""} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase" placeholder="Örn: 150" />
               </div>
             </div>
 
@@ -125,14 +126,14 @@ const GenelForm = ({ tip, baslik, veri, setVeri, kapat, kaydet, resimYukle, resi
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase ml-2 text-gray-400">Bulunduğu Kat</label>
-                <select name="kat" value={veri.kat} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
+                <select name="kat" value={veri.kat || ""} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
                   <option value="">Seçiniz</option>
                   {["Zemin Kat", "1", "2", "3", "4", "5", "6", "Bahçe Katı", "Villa Katı", "Bahçe Dubleksi", "Çatı Dubleksi"].map(k => <option key={k} value={k}>{k}</option>)}
                 </select>
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase ml-2 text-gray-400">Isıtma</label>
-                <select name="isitma" value={veri.isitma} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
+                <select name="isitma" value={veri.isitma || ""} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
                   <option value="">Seçiniz</option>
                   <option value="Doğalgaz">Doğalgaz</option>
                   <option value="Yerden Isıtma">Yerden Isıtma</option>
@@ -142,14 +143,14 @@ const GenelForm = ({ tip, baslik, veri, setVeri, kapat, kaydet, resimYukle, resi
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase ml-2 text-gray-400">Banyo Sayısı</label>
-                <select name="banyo" value={veri.banyo} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
+                <select name="banyo" value={veri.banyo || ""} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
                   <option value="">Seçiniz</option>
                   {[1, 2, 3, 4, 5].map(b => <option key={b} value={b}>{b}</option>)}
                 </select>
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase ml-2 text-gray-400">Site İçerisinde</label>
-                <select name="siteIci" value={veri.siteIci} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
+                <select name="siteIci" value={veri.siteIci || ""} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
                   <option value="">Seçiniz</option>
                   <option value="Evet">Evet</option>
                   <option value="Hayır">Hayır</option>
@@ -161,7 +162,7 @@ const GenelForm = ({ tip, baslik, veri, setVeri, kapat, kaydet, resimYukle, resi
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-6 bg-blue-50/50 rounded-[30px] border border-blue-100">
                <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase ml-2 text-blue-400">İl</label>
-                  <select name="il" value={veri.il} onChange={handleInputChange} className="w-full p-4 bg-white rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
+                  <select name="il" value={veri.il || ""} onChange={handleInputChange} className="w-full p-4 bg-white rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
                     <option value="">Seçiniz</option>
                     <option value="Aydın">Aydın</option>
                     <option value="İzmir">İzmir</option>
@@ -169,35 +170,35 @@ const GenelForm = ({ tip, baslik, veri, setVeri, kapat, kaydet, resimYukle, resi
                </div>
                <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase ml-2 text-blue-400">İlçe</label>
-                  <select name="ilce" value={veri.ilce} onChange={handleInputChange} className="w-full p-4 bg-white rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
+                  <select name="ilce" value={veri.ilce || ""} onChange={handleInputChange} className="w-full p-4 bg-white rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
                     <option value="">Seçiniz</option>
                     {veri.il && Object.keys(lokasyonVerisi[veri.il]).map(i => <option key={i} value={i}>{i}</option>)}
                   </select>
                </div>
                <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase ml-2 text-blue-400">Mahalle</label>
-                  <select name="mahalle" value={veri.mahalle} onChange={handleInputChange} className="w-full p-4 bg-white rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
+                  <select name="mahalle" value={veri.mahalle || ""} onChange={handleInputChange} className="w-full p-4 bg-white rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase cursor-pointer">
                     <option value="">Seçiniz</option>
-                    {veri.il && veri.ilce && lokasyonVerisi[veri.il][veri.ilce].map(m => <option key={m} value={m}>{m}</option>)}
+                    {veri.il && veri.ilce && lokasyonVerisi[veri.il][veri.ilce]?.map(m => <option key={m} value={m}>{m}</option>)}
                   </select>
                </div>
             </div>
 
             {/* ADA / PARSEL */}
             <div className="grid grid-cols-2 gap-4">
-              <input name="ada" value={veri.ada} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase" placeholder="ADA NO" />
-              <input name="parsel" value={veri.parsel} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase" placeholder="PARSEL NO" />
+              <input name="ada" value={veri.ada || ""} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase" placeholder="ADA NO" />
+              <input name="parsel" value={veri.parsel || ""} onChange={handleInputChange} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase" placeholder="PARSEL NO" />
             </div>
 
             {/* AÇIKLAMA */}
             <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase ml-2 text-gray-400">İlan Açıklaması</label>
-                <textarea name="aciklama" value={veri.aciklama} onChange={handleInputChange} rows={5} className="w-full p-6 bg-gray-50 rounded-[30px] border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase transition-all resize-none placeholder:text-gray-300" placeholder="İlan hakkında detaylı bilgi giriniz..."></textarea>
+                <textarea name="aciklama" value={veri.aciklama || ""} onChange={handleInputChange} rows={5} className="w-full p-6 bg-gray-50 rounded-[30px] border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xs uppercase transition-all resize-none placeholder:text-gray-300" placeholder="İlan hakkında detaylı bilgi giriniz..."></textarea>
             </div>
 
             {/* KAYDET BUTONU */}
             <button type="submit" className="w-full bg-[#0A192F] text-[#FFD700] py-6 rounded-[30px] font-black text-sm uppercase tracking-[4px] shadow-2xl hover:bg-black hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3">
-              <Save size={20} /> İLANI YAYINLA / GÜNCELLE
+              <Save size={20} /> {veri.id ? "DEĞİŞİKLİKLERİ KAYDET" : "İLANI YAYINLA"}
             </button>
 
           </form>
