@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import Giris from './Sayfalar/Giris'; 
-// AnaPanel yerine Navigasyon'u doğru klasörden çağırıyoruz:
-import Navigasyon from './Bilesenler/Navigasyon';
+// Tüm yolları küçük harf yaparak çakışmayı önlüyoruz
+import Giris from './sayfalar/Giris'; 
+import Navigasyon from './bilesenler/Navigasyon';
 
 const App = () => {
   const [kullanici, setKullanici] = useState(null);
@@ -27,7 +27,6 @@ const App = () => {
     );
   }
 
-  // Kullanıcı varsa Navigasyon'u, yoksa Giriş sayfasını göster
   return kullanici ? <Navigasyon /> : <Giris />;
 };
 
