@@ -5,7 +5,7 @@ import { collection, query, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serve
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { X, Search, Image as ImageIcon, Loader2, Edit3, Trash2, MapPin, UserPlus, ShieldCheck, LogOut, LayoutGrid, Briefcase, Plus, Archive, CheckCircle2, AlertCircle } from 'lucide-react';
 // YENİ FORM BİLEŞENİNİ IMPORT EDİYORUZ
-import GenelForm from './components/GenelForm';
+import GenelForm from '../bilesenler/GenelForm';
 
 const IlanYonetimi = () => {
   const [gorunum, setGorunum] = useState("OFIS"); 
