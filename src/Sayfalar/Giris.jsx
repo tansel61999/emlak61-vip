@@ -5,15 +5,22 @@ import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 const Giris = () => {
   const googleIleGiris = async () => {
     try {
+      // Önce mevcut oturum kalıntılarını temizle (Zorunlu)
       await signOut(yetki);
+
       const googleSaglayici = new GoogleAuthProvider();
+      
+      // Her seferinde hesap seçme penceresini zorunlu hale getirir
       googleSaglayici.setCustomParameters({
         prompt: 'select_account',
+        // Ekstra güvenlik: Tarayıcıya bu girişin "taze" olduğunu söyler
         auth_type: 'reauthenticate'
       });
+
       await signInWithPopup(yetki, googleSaglayici);
     } catch (hata) {
       console.error("Giriş hatası:", hata);
+      // Kullanıcı pencereyi kapatırsa hata vermemesi için kontrol
       if (hata.code !== 'auth/cancelled-popup-request') {
         alert("Giriş başarısız!");
       }
@@ -22,11 +29,6 @@ const Giris = () => {
 
   return (
     <div className="min-h-screen bg-[#0A192F] flex flex-col items-center justify-center p-4">
-      {/* VERCEL TEST YAZISI */}
-      <div className="mb-4 bg-red-600 text-white px-6 py-2 rounded-full font-black animate-bounce shadow-lg">
-        VERCEL TEST BAŞARILI ✅
-      </div>
-
       <div className="bg-white p-10 rounded-[40px] shadow-2xl w-full max-w-md text-center border-[8px] border-white/10">
         <div className="mb-8">
           <h1 className="text-4xl font-black text-[#0A192F] mb-2 tracking-tighter italic">
