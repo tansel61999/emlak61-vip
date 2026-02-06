@@ -6,7 +6,6 @@ const IlanYonetimi = () => {
   const [yeniIlan, setYeniIlan] = useState({ baslik: '', fiyat: '', durum: 'Aktif' });
   const db = getFirestore();
 
-  // Aktif İlanları Getir
   const ilanlariGetir = async () => {
     const q = query(collection(db, "ilanlar"), where("durum", "==", "Aktif"));
     const querySnapshot = await getDocs(q);
@@ -16,15 +15,14 @@ const IlanYonetimi = () => {
 
   useEffect(() => { ilanlariGetir(); }, []);
 
-  // İlan Ekle
   const ilanEkle = async (e) => {
     e.preventDefault();
+    if(!yeniIlan.baslik || !yeniIlan.fiyat) return;
     await addDoc(collection(db, "ilanlar"), { ...yeniIlan, tarih: new Date().toISOString() });
     setYeniIlan({ baslik: '', fiyat: '', durum: 'Aktif' });
     ilanlariGetir();
   };
 
-  // İlanı Arşivle (Satıldı veya Pasif Yap)
   const arsivle = async (id, yeniDurum) => {
     const ilanRef = doc(db, "ilanlar", id);
     await updateDoc(ilanRef, { durum: yeniDurum });
@@ -32,41 +30,56 @@ const IlanYonetimi = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-[#0A192F]">İLAN YÖNETİMİ</h2>
-      
-      {/* İlan Ekleme Formu */}
-      <form onSubmit={ilanEkle} className="bg-white p-4 rounded shadow flex gap-4">
-        <input 
-          value={yeniIlan.baslik} 
-          onChange={(e) => setYeniIlan({...yeniIlan, baslik: e.target.value})}
-          placeholder="İlan Başlığı (Örn: Kuşadası Satılık Villa)" 
-          className="border p-2 flex-1 rounded" 
-          required 
-        />
-        <input 
-          value={yeniIlan.fiyat} 
-          onChange={(e) => setYeniIlan({...yeniIlan, fiyat: e.target.value})}
-          placeholder="Fiyat" 
-          className="border p-2 w-32 rounded" 
-          required 
-        />
-        <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded">EKLE</button>
-      </form>
+    <div className="min-h-screen bg-[#0A192F] p-4 lg:p-8">
+      <div className="max-w-6xl mx-auto">
+        <h2 className="text-[#FFD700] text-3xl font-black mb-8 tracking-tighter border-b-2 border-[#FFD700] pb-2 inline-block">
+          İLAN YÖNETİMİ
+        </h2>
+        
+        {/* Şık Form Tasarımı */}
+        <form onSubmit={ilanEkle} className="bg-[#112240] p-6 rounded-xl shadow-2xl mb-10 border border-[#233554] flex flex-col md:flex-row gap-4">
+          <input 
+            value={yeniIlan.baslik} 
+            onChange={(e) => setYeniIlan({...yeniIlan, baslik: e.target.value})}
+            placeholder="İlan Başlığı..." 
+            className="flex-1 bg-[#0A192F] border border-[#233554] text-white p-3 rounded-lg focus:outline-none focus:border-[#FFD700] transition-colors"
+          />
+          <input 
+            value={yeniIlan.fiyat} 
+            onChange={(e) => setYeniIlan({...yeniIlan, fiyat: e.target.value})}
+            placeholder="Fiyat" 
+            className="md:w-40 bg-[#0A192F] border border-[#233554] text-white p-3 rounded-lg focus:outline-none focus:border-[#FFD700]"
+          />
+          <button type="submit" className="bg-[#FFD700] text-[#0A192F] font-bold px-8 py-3 rounded-lg hover:bg-yellow-500 transition-all transform hover:scale-105">
+            EKLE
+          </button>
+        </form>
 
-      {/* Aktif İlan Listesi */}
-      <div className="grid gap-4">
-        {ilanlar.map(ilan => (
-          <div key={ilan.id} className="bg-white p-4 rounded shadow flex justify-between items-center">
-            <div>
-              <span className="font-bold">{ilan.baslik}</span> - {ilan.fiyat} TL
+        {/* İlan Kartları */}
+        <div className="grid gap-4">
+          {ilanlar.map(ilan => (
+            <div key={ilan.id} className="bg-[#112240] p-5 rounded-lg border border-[#233554] flex justify-between items-center hover:border-[#FFD700] transition-all group">
+              <div>
+                <h3 className="text-white font-bold text-lg group-hover:text-[#FFD700] transition-colors">{ilan.baslik}</h3>
+                <p className="text-gray-400 font-mono">{Number(ilan.fiyat).toLocaleString()} TL</p>
+              </div>
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => arsivle(ilan.id, 'Satıldı')} 
+                  className="bg-blue-600/20 text-blue-400 border border-blue-600/50 px-4 py-2 rounded hover:bg-blue-600 hover:text-white transition-all text-xs font-bold"
+                >
+                  SATILDI
+                </button>
+                <button 
+                  onClick={() => arsivle(ilan.id, 'Pasif')} 
+                  className="bg-gray-600/20 text-gray-400 border border-gray-600/50 px-4 py-2 rounded hover:bg-gray-600 hover:text-white transition-all text-xs font-bold"
+                >
+                  PASİF YAP
+                </button>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <button onClick={() => arsivle(ilan.id, 'Satıldı')} className="bg-blue-500 text-white px-3 py-1 rounded text-sm">SATILDI</button>
-              <button onClick={() => arsivle(ilan.id, 'Pasif')} className="bg-gray-500 text-white px-3 py-1 rounded text-sm">PASİF YAP</button>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
