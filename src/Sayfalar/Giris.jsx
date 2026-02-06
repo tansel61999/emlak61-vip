@@ -5,16 +5,15 @@ import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 const Giris = () => {
   const googleIleGiris = async () => {
     try {
-      // Önce mevcut oturumu temizle
+      // Önceki oturumu temizleyerek hesap seçme ekranını zorlar
       await signOut(yetki);
       
-      const googleSaglayici = new GoogleAuthProvider();
-      googleSaglayici.setCustomParameters({
-        prompt: 'select_account',
-        auth_type: 'reauthenticate'
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({
+        prompt: 'select_account'
       });
 
-      await signInWithPopup(yetki, googleSaglayici);
+      await signInWithPopup(yetki, provider);
     } catch (hata) {
       console.error("Giriş hatası:", hata);
       if (hata.code !== 'auth/cancelled-popup-request') {
@@ -25,9 +24,9 @@ const Giris = () => {
 
   return (
     <div className="min-h-screen bg-[#0A192F] flex flex-col items-center justify-center p-4">
-      {/* VERCEL TEST YAZISI */}
+      {/* VERCEL DURUM KONTROLÜ */}
       <div className="mb-6 bg-red-600 text-white px-8 py-3 rounded-full font-black animate-bounce shadow-2xl border-4 border-white">
-        VERCEL TEST BAŞARILI ✅
+        SİSTEM AKTİF: VERCEL TEST ✅
       </div>
 
       <div className="bg-white p-10 rounded-[40px] shadow-2xl w-full max-w-md text-center border-[8px] border-white/10">
