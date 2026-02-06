@@ -94,14 +94,15 @@ const IlanYonetimi = () => {
     return new Intl.NumberFormat('tr-TR').format(deger);
   };
 
+  // RESİM YÜKLEME DÜZELTİLDİ: URL'ler tam oluşmadan state güncellenmez.
   const resimleriYukle = async (files) => {
     if (!files || files.length === 0) return;
     setResimYukleniyor(true);
     try {
       const yuklemeIslemleri = Array.from(files).map(async (file) => {
         const storageRef = ref(depolama, `ilanlar/${Date.now()}_${file.name}`);
-        await uploadBytes(storageRef, file);
-        return await getDownloadURL(storageRef);
+        const snapshot = await uploadBytes(storageRef, file);
+        return await getDownloadURL(snapshot.ref);
       });
       
       const yuklenenURLler = await Promise.all(yuklemeIslemleri);
@@ -296,7 +297,7 @@ const IlanYonetimi = () => {
         </div>
       </div>
 
-      {/* DETAY MODAL */}
+      {/* DETAY MODAL - Arsa/Tarla Mantığı Burada */}
       {detayIlan && (
         <div className="fixed inset-0 bg-[#0A192F]/98 z-[1000] overflow-y-auto" onClick={() => setDetayIlan(null)}>
             <div className="min-h-screen flex items-center justify-center p-4 md:p-10">
@@ -350,7 +351,7 @@ const IlanYonetimi = () => {
                     <h1 className="text-xl font-black uppercase mb-10 leading-tight">{detayIlan.baslik}</h1>
 
                     <div className="grid grid-cols-2 gap-4 mb-10">
-                        {/* ARSA/TARLA İSE SADECE ADA-PARSEL VE M2 GÖSTER */}
+                        {/* ARSA/TARLA ÖZEL GÖRÜNÜM */}
                         {detayIlan.emlakTipi === "Arsa" || detayIlan.emlakTipi === "Tarla" ? (
                           <>
                             <div className="bg-blue-50 p-5 rounded-[25px] border border-blue-100 col-span-2 flex gap-4">
@@ -373,7 +374,7 @@ const IlanYonetimi = () => {
                             </div>
                           </>
                         ) : (
-                          /* DİĞER EMLAK TİPLERİ İÇİN STANDART ALANLAR */
+                          /* STANDART KONUT GÖRÜNÜMÜ */
                           <>
                             {[
                               { l: "ODA", v: detayIlan.odaSayisi },
